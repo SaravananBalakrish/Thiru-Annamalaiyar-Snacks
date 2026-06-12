@@ -1,0 +1,13 @@
+generatorName: dart-dio
+inputSpec: http://localhost:3000/v1/openapi.json
+outputDir: ./lib/generated/api
+additionalProperties:
+  pubName: field_techy_api
+  pubVersion: 1.0.0
+  serializationLibrary: built_value
+  useEnumExtension: true
+  nullableFields: true
+  legacyDiscriminatorBehavior: false
+  enumUnknownDefaultCase: true
+  dateLibrary: core
+
