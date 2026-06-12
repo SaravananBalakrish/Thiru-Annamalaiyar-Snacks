@@ -1,0 +1,75 @@
+import { pgTable, serial, varchar, integer, numeric, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+
+export const categories = pgTable('categories', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+});
+
+export const products = pgTable('products', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  price: numeric('price', { precision: 10, scale: 2 }).notNull(),
+  imageUrl: text('image_url'),
+  categoryId: integer('category_id').references(() => categories.id, { onDelete: 'set null' }),
+});
+
+export const cartItems = pgTable('cart_items', {
+  id: serial('id').primaryKey(),
+  productId: integer('product_id')
+    .notNull()
+    .references(() => products.id, { onDelete: 'cascade' }),
+  quantity: integer('quantity').notNull().default(1),
+});
+
+export const orders = pgTable('orders', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull(),
+  totalPrice: numeric('total_price', { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  paymentMethod: varchar('payment_method', { length: 50 }).notNull().default('upi'),
+  paymentStatus: varchar('payment_status', { length: 50 }).notNull().default('pending'),
+  transactionRef: varchar('transaction_ref', { length: 100 }),
+});
+
+export const orderItems = pgTable('order_items', {
+  id: serial('id').primaryKey(),
+  orderId: integer('order_id')
+    .notNull()
+    .references(() => orders.id, { onDelete: 'cascade' }),
+  productId: integer('product_id')
+    .notNull()
+    .references(() => products.id),
+  quantity: integer('quantity').notNull(),
+  price: numeric('price', { precision: 10, scale: 2 }).notNull(),
+});
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  phoneNumber: varchar('phone_number', { length: 20 }).notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const rooms = pgTable('rooms', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+});
+
+export const participants = pgTable('participants', {
+  id: serial('id').primaryKey(),
+  roomId: integer('room_id')
+    .notNull()
+    .references(() => rooms.id, { onDelete: 'cascade' }),
+  userId: integer('user_id').notNull(),
+});
+
+export const messages = pgTable('messages', {
+  id: serial('id').primaryKey(),
+  roomId: integer('room_id')
+    .notNull()
+    .references(() => rooms.id, { onDelete: 'cascade' }),
+  senderId: integer('sender_id').notNull(),
+  message: text('message').notNull(),
+  isRead: boolean('is_read').notNull().default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
