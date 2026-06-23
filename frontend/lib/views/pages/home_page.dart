@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildBanner(),
-          _buildMindSection(),
+          _buildMindSection(productController),
           _buildRecommendedSection(cart, products),
           const Footer(),
         ],
@@ -102,12 +102,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildMindSection() {
-    final categories = [
-      {'name': 'Sweets', 'img': 'https://cdn-icons-png.flaticon.com/512/2513/2513831.png'},
-      {'name': 'Savoury', 'img': 'https://cdn-icons-png.flaticon.com/512/3014/3014534.png'},
-      {'name': 'Bakery', 'img': 'https://cdn-icons-png.flaticon.com/512/3014/3014498.png'},
-    ];
+  Widget _buildMindSection(ProductController productController) {
+    final dynamicCategories = productController.getCategories().where((c) => c != 'All').toList();
+
+    String getImgForCategory(String name) {
+      if (name.toLowerCase() == 'sweets') return 'https://cdn-icons-png.flaticon.com/512/2513/2513831.png';
+      if (name.toLowerCase() == 'savoury') return 'https://cdn-icons-png.flaticon.com/512/3014/3014534.png';
+      if (name.toLowerCase() == 'bakery') return 'https://cdn-icons-png.flaticon.com/512/3014/3014498.png';
+      return 'https://cdn-icons-png.flaticon.com/512/3014/3014511.png'; // Generic snack icon
+    }
+
+    if (dynamicCategories.isEmpty) {
+      return const SizedBox.shrink(); // Hide section if no categories
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,15 +136,15 @@ class _HomePageState extends State<HomePage> {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: categories.length,
+            itemCount: dynamicCategories.length,
             itemBuilder: (context, index) {
-              final cat = categories[index];
+              final catName = dynamicCategories[index];
               return InkWell(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CategoryMenuPage(initialCategory: cat['name']!),
+                      builder: (context) => CategoryMenuPage(initialCategory: catName),
                     ),
                   );
                 },
@@ -156,12 +163,12 @@ class _HomePageState extends State<HomePage> {
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(12),
-                        child: Image.network(cat['img']!),
+                        child: Image.network(getImgForCategory(catName)),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      cat['name']!,
+                      catName,
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: kText),
                     ),
                   ],

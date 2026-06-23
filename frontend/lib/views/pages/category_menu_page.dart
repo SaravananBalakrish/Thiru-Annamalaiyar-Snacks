@@ -14,29 +14,32 @@ class CategoryMenuPage extends StatefulWidget {
 }
 
 class _CategoryMenuPageState extends State<CategoryMenuPage> {
-  late String selectedTopCategory;
-  String selectedSubCategory = "Ghewars"; // Default as per screenshot
-
-  final List<String> topCategories = ["Sweets", "Namkeens", "Snacks", "Bakery & ..."];
-  final List<Map<String, dynamic>> subCategories = [
-    {"name": "Packed Sweets", "icon": Icons.cake_outlined},
-    {"name": "Ghewars", "icon": Icons.bakery_dining_outlined},
-    {"name": "Ghee & Khova Sw...", "icon": Icons.cookie_outlined},
-    {"name": "Assorted Sweets", "icon": Icons.icecream_outlined},
-    {"name": "Special Kaju Sweets", "icon": Icons.set_meal_outlined},
-  ];
+  late String selectedCategory;
 
   @override
   void initState() {
     super.initState();
-    selectedTopCategory = widget.initialCategory;
+    selectedCategory = widget.initialCategory;
+  }
+
+  IconData _getIconForCategory(String name) {
+    if (name.toLowerCase() == 'sweets') return Icons.cake_outlined;
+    if (name.toLowerCase() == 'savoury') return Icons.set_meal_outlined;
+    if (name.toLowerCase() == 'bakery') return Icons.bakery_dining_outlined;
+    if (name.toLowerCase() == 'all') return Icons.menu_book_outlined;
+    return Icons.cookie_outlined;
   }
 
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartController>();
     final productController = context.watch<ProductController>();
-    final topCategories = productController.getCategories();
+    final categories = productController.getCategories();
+
+    // If the initial category is not in the list, fallback to the first available category
+    if (categories.isNotEmpty && !categories.contains(selectedCategory)) {
+      selectedCategory = categories.first;
+    }
 
     if (productController.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator(color: kGold)));
@@ -52,7 +55,7 @@ class _CategoryMenuPageState extends State<CategoryMenuPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          selectedTopCategory,
+          selectedCategory,
           style: const TextStyle(color: kText, fontWeight: FontWeight.bold, fontSize: 18),
         ),
         actions: [
@@ -62,57 +65,17 @@ class _CategoryMenuPageState extends State<CategoryMenuPage> {
           ),
         ],
       ),
-      body: Column(
+      body: Row(
         children: [
-          _buildTopTabs(topCategories),
-          Expanded(
-            child: Row(
-              children: [
-                _buildSidebar(),
-                Expanded(child: _buildProductList(cart, productController)),
-              ],
-            ),
-          ),
+          _buildSidebar(categories),
+          Expanded(child: _buildProductList(cart, productController)),
         ],
       ),
       bottomNavigationBar: cart.totalCount > 0 ? _buildCartStrip(cart, productController.products) : null,
     );
   }
 
-  Widget _buildTopTabs(List<String> categories) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: categories.map((cat) {
-          final isSelected = selectedTopCategory == cat;
-          return Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: InkWell(
-              onTap: () => setState(() => selectedTopCategory = cat),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected ? kDark : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: isSelected ? kDark : kGold.withValues(alpha: 0.2)),
-                ),
-                child: Text(
-                  cat,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : kText,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildSidebar() {
+  Widget _buildSidebar(List<String> categories) {
     return Container(
       width: 100,
       decoration: BoxDecoration(
@@ -120,12 +83,12 @@ class _CategoryMenuPageState extends State<CategoryMenuPage> {
         border: Border(right: BorderSide(color: kGold.withValues(alpha: 0.1))),
       ),
       child: ListView.builder(
-        itemCount: subCategories.length,
+        itemCount: categories.length,
         itemBuilder: (context, index) {
-          final sub = subCategories[index];
-          final isSelected = selectedSubCategory == sub['name'];
+          final cat = categories[index];
+          final isSelected = selectedCategory == cat;
           return InkWell(
-            onTap: () => setState(() => selectedSubCategory = sub['name']),
+            onTap: () => setState(() => selectedCategory = cat),
             child: Stack(
               children: [
                 Container(
@@ -134,10 +97,10 @@ class _CategoryMenuPageState extends State<CategoryMenuPage> {
                   color: isSelected ? Colors.white : Colors.transparent,
                   child: Column(
                     children: [
-                      Icon(sub['icon'], color: isSelected ? kGold : kTextMuted, size: 28),
+                      Icon(_getIconForCategory(cat), color: isSelected ? kGold : kTextMuted, size: 28),
                       const SizedBox(height: 8),
                       Text(
-                        sub['name'],
+                        cat,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 10,
@@ -170,7 +133,7 @@ class _CategoryMenuPageState extends State<CategoryMenuPage> {
   }
 
   Widget _buildProductList(CartController cart, ProductController productController) {
-    final products = productController.getProductsByCategory(selectedTopCategory);
+    final products = productController.getProductsByCategory(selectedCategory);
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -207,7 +170,7 @@ class _CategoryMenuPageState extends State<CategoryMenuPage> {
                   children: [
                     Expanded(
                       child: Text(
-                        "Atta ${product.name}",
+                        product.name,
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                     ),

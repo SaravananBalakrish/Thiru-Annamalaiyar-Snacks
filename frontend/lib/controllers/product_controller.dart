@@ -1,36 +1,28 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
+import '../utils/error_handler_mixin.dart';
 import 'order_controller.dart';
 
-class ProductController extends ChangeNotifier {
+class ProductController extends ChangeNotifier with ErrorHandlerMixin {
   final OrderController? orderController;
   List<Product> _products = [];
-  bool _isLoading = false;
-  String? _error;
 
   ProductController({this.orderController});
 
   List<Product> get products => _products;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
+  List<String> _categories = [];
 
   Future<void> loadProducts() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
+    await runSafe(() async {
+      // Fetch categories explicitly from their separate path
+      _categories = await ApiService.fetchCategoryNames();
       _products = await ApiService.fetchProducts();
+      
       if (orderController != null) {
         await orderController!.loadOrders(_products);
       }
-    } catch (e) {
-      _error = 'Failed to load products: $e';
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    });
   }
 
   List<Product> getProductsByCategory(String category) {
@@ -39,8 +31,12 @@ class ProductController extends ChangeNotifier {
   }
 
   List<String> getCategories() {
-    final categories = _products.map((p) => p.category).toSet().toList();
-    categories.sort();
-    return ['All', ...categories];
+    if (_categories.isEmpty) {
+      // Fallback in case categories fetch fails but products succeed
+      final fallback = _products.map((p) => p.category).toSet().toList();
+      fallback.sort();
+      return ['All', ...fallback];
+    }
+    return ['All', ..._categories];
   }
 }

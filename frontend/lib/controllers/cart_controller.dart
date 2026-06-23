@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/storage_service.dart';
 import '../services/api_service.dart';
+import '../utils/error_handler_mixin.dart';
 
-class CartController extends ChangeNotifier {
+class CartController extends ChangeNotifier with ErrorHandlerMixin {
   Map<int, int> _items = {}; // productId: quantity
 
   CartController() {
@@ -11,19 +12,21 @@ class CartController extends ChangeNotifier {
   }
 
   Future<void> _loadInitialData() async {
-    final token = await StorageService.getToken();
-    if (token != null) {
-      _items = await ApiService.fetchCart();
-    } else {
-      final stored = await StorageService.getCart();
-      _items = stored.map((key, value) => MapEntry(int.parse(key), value));
-    }
-    notifyListeners();
+    await runSafe(() async {
+      final token = await StorageService.getToken();
+      if (token != null) {
+        _items = await ApiService.fetchCart();
+      } else {
+        final stored = await StorageService.getCart();
+        _items = stored.map((key, value) => MapEntry(int.parse(key), value));
+      }
+    });
   }
 
   Future<void> syncWithServer() async {
-    _items = await ApiService.fetchCart();
-    notifyListeners();
+    await runSafe(() async {
+      _items = await ApiService.fetchCart();
+    });
   }
 
   Future<void> _saveToStorage() async {
@@ -53,37 +56,39 @@ class CartController extends ChangeNotifier {
   }
 
   void addItem(int productId) async {
-    _items[productId] = (_items[productId] ?? 0) + 1;
-    notifyListeners();
-    
-    final token = await StorageService.getToken();
-    if (token != null) {
-      await ApiService.addToCart(productId, 1);
-      // Optional: sync full cart after add to be sure
-      // await syncWithServer();
-    } else {
-      await _saveToStorage();
-    }
+    await runSafe(() async {
+      _items[productId] = (_items[productId] ?? 0) + 1;
+      notifyListeners();
+      
+      final token = await StorageService.getToken();
+      if (token != null) {
+        await ApiService.addToCart(productId, 1);
+      } else {
+        await _saveToStorage();
+      }
+    });
   }
 
   void removeItem(int productId) async {
     if (_items.containsKey(productId)) {
-      final token = await StorageService.getToken();
-      if (_items[productId]! > 1) {
-        _items[productId] = _items[productId]! - 1;
-        if (token != null) {
-          await ApiService.updateCartItem(productId, _items[productId]!);
+      await runSafe(() async {
+        final token = await StorageService.getToken();
+        if (_items[productId]! > 1) {
+          _items[productId] = _items[productId]! - 1;
+          if (token != null) {
+            await ApiService.updateCartItem(productId, _items[productId]!);
+          }
+        } else {
+          _items.remove(productId);
+          if (token != null) {
+            await ApiService.removeFromCart(productId);
+          }
         }
-      } else {
-        _items.remove(productId);
-        if (token != null) {
-          await ApiService.removeFromCart(productId);
+        if (token == null) {
+          await _saveToStorage();
         }
-      }
-      if (token == null) {
-        await _saveToStorage();
-      }
-      notifyListeners();
+        notifyListeners();
+      });
     }
   }
 

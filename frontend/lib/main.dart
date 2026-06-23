@@ -5,6 +5,7 @@ import 'controllers/cart_controller.dart';
 import 'controllers/order_controller.dart';
 import 'controllers/product_controller.dart';
 import 'views/pages/auth/login_page.dart';
+import 'views/pages/splash_page.dart';
 import 'constants.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -16,12 +17,10 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => CartController()),
         ChangeNotifierProvider(create: (_) => OrderController()),
-        ChangeNotifierProxyProvider<OrderController, ProductController>(
+        ChangeNotifierProvider(
           create: (context) => ProductController(
             orderController: context.read<OrderController>(),
           ),
-          update: (context, orderController, productController) =>
-              productController!..loadProducts(), // Or just return the existing one
         ),
       ],
       child: const AnnamalaiyarApp(),
@@ -50,7 +49,7 @@ class AnnamalaiyarApp extends StatelessWidget {
         textTheme: GoogleFonts.latoTextTheme(),
         scaffoldBackgroundColor: kCream,
       ),
-      home: const LoginPage(),
+      home: const SplashPage(),
       routes: {
         '/login': (context) => const LoginPage(),
       },

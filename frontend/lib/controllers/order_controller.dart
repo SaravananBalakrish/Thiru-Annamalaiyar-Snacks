@@ -4,13 +4,17 @@ import '../models/product.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 
-class OrderController extends ChangeNotifier {
+import '../utils/error_handler_mixin.dart';
+
+class OrderController extends ChangeNotifier with ErrorHandlerMixin {
   List<OrderModel> _orders = [];
   List<OrderModel> get orders => _orders;
 
   Future<void> loadOrders(List<Product> availableProducts) async {
     final token = await StorageService.getToken();
-    if (token != null) {
+    if (token == null) return;
+
+    await runSafe(() async {
       final apiOrders = await ApiService.fetchOrders();
       _orders = apiOrders.map((o) {
         return OrderModel(
@@ -33,15 +37,11 @@ class OrderController extends ChangeNotifier {
           totalAmount: double.tryParse(o.totalPrice ?? '0') ?? 0,
           date: o.createdAt ?? DateTime.now(),
           status: _mapStatus(o.paymentStatus),
-          city: 'N/A', // API might not return this in the simplified Order model
+          city: 'N/A',
           address: 'N/A',
         );
       }).toList();
-    } else {
-      // Load local guest orders if any
-      // ...
-    }
-    notifyListeners();
+    });
   }
 
   OrderStatus _mapStatus(String? status) {
