@@ -267,6 +267,84 @@ export const openapiSpec: OpenAPIObject = {
         },
       },
     },
+    // ---- Reviews ----
+    '/v1/reviews': {
+      get: {
+        tags: ['Reviews'],
+        summary: 'List all reviews (Admin)',
+        security: [{ Bearer: [] }],
+        responses: {
+          '200': {
+            description: 'A list of reviews',
+            content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Review' } } } },
+          },
+          '401': { description: 'Unauthorized' },
+        },
+      },
+      post: {
+        tags: ['Reviews'],
+        summary: 'Create a new review',
+        security: [{ Bearer: [] }],
+        requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/ReviewInput' } } } },
+        responses: {
+          '201': { description: 'Review created', content: { 'application/json': { schema: { $ref: '#/components/schemas/Review' } } } },
+          '400': { description: 'Invalid input' },
+          '401': { description: 'Unauthorized' },
+          '404': { description: 'Product not found' },
+        },
+      },
+    },
+    '/v1/reviews/product/{productId}': {
+      get: {
+        tags: ['Reviews'],
+        summary: 'List all reviews for a product',
+        parameters: [{ name: 'productId', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: {
+          '200': {
+            description: 'A list of reviews for the product',
+            content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Review' } } } },
+          },
+          '400': { description: 'Invalid productId' },
+        },
+      },
+    },
+    '/v1/reviews/{id}': {
+      get: {
+        tags: ['Reviews'],
+        summary: 'Get a review by ID',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: {
+          '200': { description: 'Review object', content: { 'application/json': { schema: { $ref: '#/components/schemas/Review' } } } },
+          '400': { description: 'Invalid id' },
+          '404': { description: 'Review not found' },
+        },
+      },
+      put: {
+        tags: ['Reviews'],
+        summary: 'Update a review (Owner only)',
+        security: [{ Bearer: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/ReviewUpdate' } } } },
+        responses: {
+          '200': { description: 'Review updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/Review' } } } },
+          '400': { description: 'Invalid input' },
+          '401': { description: 'Unauthorized' },
+          '404': { description: 'Review not found or not authorized' },
+        },
+      },
+      delete: {
+        tags: ['Reviews'],
+        summary: 'Delete a review (Owner only)',
+        security: [{ Bearer: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: {
+          '200': { description: 'Review deleted' },
+          '400': { description: 'Invalid id' },
+          '401': { description: 'Unauthorized' },
+          '404': { description: 'Review not found or not authorized' },
+        },
+      },
+    },
   },
 
   components: {
@@ -374,6 +452,34 @@ export const openapiSpec: OpenAPIObject = {
         required: ['transactionRef'],
         properties: {
           transactionRef: { type: 'string', minLength: 1, description: 'UPI Transaction Reference / UTR number' },
+        },
+      },
+      // --- Reviews ---
+      Review: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer' },
+          productId: { type: 'integer' },
+          userId: { type: 'integer' },
+          rating: { type: 'integer', minimum: 1, maximum: 5, description: 'Rating from 1 to 5' },
+          comment: { type: 'string', description: 'Review comment' },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      ReviewInput: {
+        type: 'object',
+        required: ['productId', 'rating'],
+        properties: {
+          productId: { type: 'integer', minimum: 1 },
+          rating: { type: 'integer', minimum: 1, maximum: 5 },
+          comment: { type: 'string' },
+        },
+      },
+      ReviewUpdate: {
+        type: 'object',
+        properties: {
+          rating: { type: 'integer', minimum: 1, maximum: 5 },
+          comment: { type: 'string' },
         },
       },
     },

@@ -2,67 +2,144 @@ import 'package:flutter/material.dart';
 import '../../constants.dart';
 import 'auth/login_page.dart';
 import 'orders_page.dart';
+import 'saved_addresses_page.dart';
+import 'active_orders_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: kCream,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          "Settings",
-          style: TextStyle(color: kText, fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        centerTitle: true,
+        title: const Text(kSettings),
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            _buildProfileSection(),
-            _buildSection("ACCOUNT", [
-              _buildListTile(Icons.shopping_bag_outlined, "My Orders", Colors.orange, onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const OrdersPage()));
-              }),
-              _buildListTile(Icons.calendar_today_outlined, "Active Orders", Colors.blue),
-              _buildListTile(Icons.location_on_outlined, "Saved Addresses", Colors.pink),
+            _buildProfileSection(theme, colorScheme),
+            _buildSection(theme, colorScheme, kAccount, [
+              _buildListTile(
+                theme,
+                colorScheme,
+                Icons.shopping_bag_outlined,
+                kMyOrders,
+                colorScheme.primary,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const OrdersPage()),
+                  );
+                },
+              ),
+              _buildListTile(
+                theme,
+                colorScheme,
+                Icons.calendar_today_outlined,
+                kActiveOrders,
+                colorScheme.primary,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ActiveOrdersPage()),
+                  );
+                },
+              ),
+              _buildListTile(
+                theme,
+                colorScheme,
+                Icons.location_on_outlined,
+                kSavedAddresses,
+                colorScheme.primary,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SavedAddressesPage()),
+                  );
+                },
+              ),
             ]),
-            _buildSection("SUPPORT & LEGAL", [
-              _buildListTile(Icons.help_outline, "Contact Us", Colors.teal),
-              _buildListTile(Icons.info_outline, "Help & FAQ", Colors.green),
-              _buildListTile(Icons.star_outline, "Rate & Review", Colors.amber),
-              _buildListTile(Icons.security_outlined, "Privacy Policy", Colors.indigo),
-              _buildListTile(Icons.description_outlined, "Terms & Conditions", Colors.blueGrey),
+            _buildSection(theme, colorScheme, kSupportLegal, [
+              _buildListTile(
+                theme,
+                colorScheme,
+                Icons.help_outline,
+                kContactUs,
+                colorScheme.primary,
+              ),
+              _buildListTile(
+                theme,
+                colorScheme,
+                Icons.info_outline,
+                kHelpFaq,
+                colorScheme.primary,
+              ),
+              _buildListTile(
+                theme,
+                colorScheme,
+                Icons.star_outline,
+                kRateReview,
+                colorScheme.primary,
+              ),
+              _buildListTile(
+                theme,
+                colorScheme,
+                Icons.security_outlined,
+                kPrivacyPolicy,
+                colorScheme.primary,
+              ),
+              _buildListTile(
+                theme,
+                colorScheme,
+                Icons.description_outlined,
+                kTermsConditions,
+                colorScheme.primary,
+              ),
             ]),
-            _buildSection("SESSION", [
-              _buildListTile(Icons.logout, "Log Out", Colors.red, isDestructive: true, onTap: () {
-                Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                  (route) => false,
-                );
-              }),
-              _buildListTile(Icons.delete_outline, "Delete Account", Colors.grey),
+            _buildSection(theme, colorScheme, kSession, [
+              _buildListTile(
+                theme,
+                colorScheme,
+                Icons.logout,
+                kLogOut,
+                colorScheme.error,
+                isDestructive: true,
+                onTap: () {
+                  Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                    (route) => false,
+                  );
+                },
+              ),
+              _buildListTile(
+                theme,
+                colorScheme,
+                Icons.delete_outline,
+                kDeleteAccount,
+                colorScheme.outline,
+              ),
             ]),
-            const SizedBox(height: 32),
+            const SizedBox(height: kPaddingXL),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileSection() {
+  Widget _buildProfileSection(ThemeData theme, ColorScheme colorScheme) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(kPaddingM),
+      padding: const EdgeInsets.all(kPaddingM),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(kRadiusL),
         boxShadow: [
           BoxShadow(
-            color: kGold.withValues(alpha: 0.05),
+            color: colorScheme.shadow.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -74,24 +151,29 @@ class SettingsPage extends StatelessWidget {
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              color: kGold.withValues(alpha: 0.1),
+              color: colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
-              border: Border.all(color: kGold.withValues(alpha: 0.2), width: 2),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.2),
+                width: 2,
+              ),
             ),
-            child: const Icon(Icons.person, size: 40, color: kGold),
+            child: Icon(Icons.person, size: 40, color: colorScheme.primary),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: kPaddingM),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   "saravanan",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: kText),
+                  style: theme.textTheme.titleLarge,
                 ),
                 Text(
                   "8681020301",
-                  style: TextStyle(fontSize: 14, color: kTextMuted.withValues(alpha: 0.7)),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  ),
                 ),
               ],
             ),
@@ -99,38 +181,54 @@ class SettingsPage extends StatelessWidget {
           TextButton(
             onPressed: () {},
             style: TextButton.styleFrom(
-              backgroundColor: kGold.withValues(alpha: 0.1),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(kRadiusXL),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: kPaddingL),
             ),
-            child: const Text("Edit", style: TextStyle(color: kGold, fontWeight: FontWeight.bold)),
+            child: Text(
+              kEdit,
+              style: TextStyle(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSection(String title, List<Widget> items) {
+  Widget _buildSection(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    String title,
+    List<Widget> items,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 24, top: 24, bottom: 8),
+          padding: const EdgeInsets.only(
+            left: kPaddingL,
+            top: kPaddingL,
+            bottom: kPaddingS,
+          ),
           child: Text(
             title,
-            style: TextStyle(
-              color: kTextMuted.withValues(alpha: 0.6),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
               fontWeight: FontWeight.bold,
-              fontSize: 12,
               letterSpacing: 1.2,
             ),
           ),
         ),
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
+          margin: const EdgeInsets.symmetric(horizontal: kPaddingM),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(kRadiusL),
           ),
           child: Column(
             children: items,
@@ -140,25 +238,35 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildListTile(IconData icon, String title, Color iconColor, {bool isDestructive = false, VoidCallback? onTap}) {
+  Widget _buildListTile(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    IconData icon,
+    String title,
+    Color iconColor, {
+    bool isDestructive = false,
+    VoidCallback? onTap,
+  }) {
     return ListTile(
       leading: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(kPaddingS),
         decoration: BoxDecoration(
           color: iconColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(kRadiusS),
         ),
-        child: Icon(icon, color: iconColor, size: 20),
+        child: Icon(icon, color: iconColor, size: kIconMedium),
       ),
       title: Text(
         title,
-        style: TextStyle(
-          fontSize: 15,
+        style: theme.textTheme.bodyLarge?.copyWith(
+          color: isDestructive ? colorScheme.error : colorScheme.onSurface,
           fontWeight: FontWeight.w500,
-          color: isDestructive ? Colors.red : kText,
         ),
       ),
-      trailing: Icon(Icons.chevron_right, color: kTextMuted.withValues(alpha: 0.3)),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+      ),
       onTap: onTap,
     );
   }

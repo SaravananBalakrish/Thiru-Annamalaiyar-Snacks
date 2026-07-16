@@ -89,14 +89,10 @@ class OrderInputBuilder implements Builder<OrderInput, OrderInputBuilder> {
   OrderInput build() => _build();
 
   _$OrderInput _build() {
-    final _$result =
-        _$v ??
+    final _$result = _$v ??
         _$OrderInput._(
           userId: BuiltValueNullFieldError.checkNotNull(
-            userId,
-            r'OrderInput',
-            'userId',
-          ),
+              userId, r'OrderInput', 'userId'),
           paymentMethod: paymentMethod,
         );
     replace(_$result);

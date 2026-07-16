@@ -11,41 +11,63 @@ class OrdersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Orders', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        foregroundColor: kDark,
+        title: const Text('My Orders'),
       ),
       body: Consumer<OrderController>(
         builder: (context, orderController, child) {
           if (orderController.orders.isEmpty) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.receipt_long_outlined, size: 80, color: kGold.withValues(alpha: 0.3)),
-                  const SizedBox(height: 16),
-                  Text('No orders yet', style: TextStyle(color: kTextMuted, fontSize: 18)),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(backgroundColor: kGold),
-                    child: const Text('Start Shopping', style: TextStyle(color: Colors.white)),
-                  )
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(kPaddingXL),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(kPaddingL),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.receipt_long_outlined,
+                        size: 80,
+                        color: colorScheme.primary.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    const SizedBox(height: kPaddingL),
+                    Text(
+                      "No orders yet",
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: kPaddingS),
+                    Text(
+                      "You haven't placed any orders yet. Start exploring our authentic snacks!",
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: kPaddingXL),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Start Shopping'),
+                    )
+                  ],
+                ),
               ),
             );
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(kPaddingM),
             itemCount: orderController.orders.length,
-            itemBuilder: (context, index) {
-              final order = orderController.orders[index];
-              return _OrderCard(order: order);
-            },
+            itemBuilder: (context, index) => _OrderCard(order: orderController.orders[index]),
           );
         },
       ),
@@ -59,13 +81,11 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: kGold.withValues(alpha: 0.1)),
-      ),
+      margin: const EdgeInsets.only(bottom: kPaddingM),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -73,9 +93,9 @@ class _OrderCard extends StatelessWidget {
             MaterialPageRoute(builder: (context) => OrderDetailsPage(order: order)),
           );
         },
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(kRadiusM),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(kPaddingM),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -84,42 +104,45 @@ class _OrderCard extends StatelessWidget {
                 children: [
                   Text(
                     'Order #${order.id.substring(0, 8).toUpperCase()}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   _StatusBadge(status: order.status),
                 ],
               ),
-              const Divider(height: 24),
+              const Divider(height: kPaddingL),
               Row(
                 children: [
                   Container(
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: kGoldPale,
-                      borderRadius: BorderRadius.circular(8),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(kRadiusS),
                     ),
-                    child: const Icon(Icons.shopping_bag_outlined, color: kGold),
+                    child: Icon(Icons.shopping_bag_outlined, color: colorScheme.primary),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: kPaddingM),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           '${order.items.length} ${order.items.length == 1 ? 'Item' : 'Items'}',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         Text(
                           DateFormat('MMM dd, yyyy • hh:mm a').format(order.date),
-                          style: TextStyle(color: kTextMuted, fontSize: 12),
+                          style: theme.textTheme.bodySmall,
                         ),
                       ],
                     ),
                   ),
                   Text(
-                    '₹${order.totalAmount.toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kRed),
+                    '$kCurrency${order.totalAmount.toStringAsFixed(2)}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
                   ),
                 ],
               ),
@@ -137,12 +160,20 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     Color color;
     switch (status) {
-      case OrderStatus.delivered: color = Colors.green; break;
-      case OrderStatus.cancelled: color = Colors.red; break;
-      case OrderStatus.shipped: color = Colors.blue; break;
-      default: color = kGold;
+      case OrderStatus.delivered:
+        color = kVegColor;
+        break;
+      case OrderStatus.cancelled:
+        color = colorScheme.error;
+        break;
+      case OrderStatus.shipped:
+        color = colorScheme.primary;
+        break;
+      default:
+        color = colorScheme.primary;
     }
 
     return Container(

@@ -88,14 +88,10 @@ class CartAddBuilder implements Builder<CartAdd, CartAddBuilder> {
   CartAdd build() => _build();
 
   _$CartAdd _build() {
-    final _$result =
-        _$v ??
+    final _$result = _$v ??
         _$CartAdd._(
           productId: BuiltValueNullFieldError.checkNotNull(
-            productId,
-            r'CartAdd',
-            'productId',
-          ),
+              productId, r'CartAdd', 'productId'),
           quantity: quantity,
         );
     replace(_$result);

@@ -37,9 +37,9 @@ class _$CartPatch extends CartPatch {
 
   @override
   String toString() {
-    return (newBuiltValueToStringHelper(
-      r'CartPatch',
-    )..add('quantity', quantity)).toString();
+    return (newBuiltValueToStringHelper(r'CartPatch')
+          ..add('quantity', quantity))
+        .toString();
   }
 }
 
@@ -77,14 +77,10 @@ class CartPatchBuilder implements Builder<CartPatch, CartPatchBuilder> {
   CartPatch build() => _build();
 
   _$CartPatch _build() {
-    final _$result =
-        _$v ??
+    final _$result = _$v ??
         _$CartPatch._(
           quantity: BuiltValueNullFieldError.checkNotNull(
-            quantity,
-            r'CartPatch',
-            'quantity',
-          ),
+              quantity, r'CartPatch', 'quantity'),
         );
     replace(_$result);
     return _$result;

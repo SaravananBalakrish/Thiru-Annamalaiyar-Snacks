@@ -1,4 +1,4 @@
-import '../../services/api_service.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,6 +8,13 @@ import '../../controllers/order_controller.dart';
 import '../../controllers/product_controller.dart';
 import '../../models/product.dart';
 import '../../models/order.dart';
+import '../../models/address.dart';
+import '../../controllers/address_controller.dart';
+import 'saved_addresses_page.dart';
+import 'main_screen.dart';
+import '../widgets/cart/cart_item_tile.dart';
+import '../widgets/cart/order_summary_card.dart';
+import '../widgets/cart/fulfillment_selector.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -18,487 +25,498 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   String selectedCity = "BENGALURU";
-  String address = "No 123, 5th Main, 6th Cross, Indiranagar";
   bool _isPlacingOrder = false;
-  
+  bool _isDelivery = true;
+
   @override
   Widget build(BuildContext context) {
-    final cart = context.watch<CartController>();
-    final productController = context.watch<ProductController>();
-    final products = productController.products;
-    
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: kCream,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: kText),
-          onPressed: () => Navigator.pop(context),
+        title: Text(
+          kMyCart,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        title: const Text(
-          "My Cart",
-          style: TextStyle(color: kText, fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        centerTitle: true,
       ),
-      body: cart.items.isEmpty 
-        ? _buildEmptyState(context)
-        : _buildCartContent(context, cart, products),
-      bottomNavigationBar: cart.items.isEmpty ? null : _buildBottomBar(context, cart, products),
+      body: Consumer<CartController>(
+        builder: (context, cart, _) {
+          if (cart.items.isEmpty) {
+            return _buildEmptyState(context, theme);
+          }
+          return Consumer<ProductController>(
+            builder: (context, productController, _) {
+              return _buildCartContent(
+                context,
+                cart,
+                productController,
+                productController.products,
+                theme,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, ThemeData theme) {
+    final colorScheme = theme.colorScheme;
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.shopping_cart_outlined, size: 80, color: kGold.withValues(alpha: 0.3)),
-          const SizedBox(height: 16),
-          const Text(
-            "Your cart is empty",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kText),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Add some delicious snacks to get started!",
-            style: TextStyle(color: kTextMuted.withValues(alpha: 0.7)),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kGold,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text("Browse Snacks", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCartContent(BuildContext context, CartController cart, List<Product> products) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildFulfillmentCard(),
-          const SizedBox(height: 16),
-          _buildLocationCard(context),
-          const SizedBox(height: 16),
-          _buildCartItems(cart, products),
-          const SizedBox(height: 24),
-          _buildYouMayAlsoLike(),
-          const SizedBox(height: 24),
-          _buildNoteSection(),
-          const SizedBox(height: 24),
-          _buildBillDetails(cart, products),
-          const SizedBox(height: 100),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFulfillmentCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: kGold.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.delivery_dining, color: kGold),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Fulfillment Method", style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text("Choose how you get your order", style: TextStyle(fontSize: 12, color: kTextMuted)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildToggleButton(Icons.motorcycle, "Delivery", true),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildToggleButton(Icons.store, "Store Pickup", false),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildToggleButton(IconData icon, String label, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: isSelected ? kGold : kCream,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isSelected ? kGold : kGold.withValues(alpha: 0.1)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: isSelected ? Colors.white : kGold, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.white : kGold,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLocationCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: InkWell(
-        onTap: () => _showLocationPicker(context),
-        child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(kPaddingXL),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.location_on, color: kGold),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("Delivery Address", style: TextStyle(fontSize: 12, color: kTextMuted)),
-                  Text(selectedCity, style: const TextStyle(fontWeight: FontWeight.bold)),
-                ],
+            Container(
+              padding: const EdgeInsets.all(kPaddingL),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.shopping_basket_outlined,
+                size: 80,
+                color: colorScheme.primary.withValues(alpha: 0.5),
               ),
             ),
-            Icon(Icons.chevron_right, color: kTextMuted.withValues(alpha: 0.5)),
+            const SizedBox(height: kPaddingL),
+            Text(
+              kEmptyCartTitle,
+              style: theme.textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: kPaddingS),
+            Text(
+              kEmptyCartSubtitle,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: kPaddingXL),
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                  context, '/menu', (route) => false),
+              child: const Text(kStartShopping),
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _showLocationPicker(BuildContext context) {
+  Widget _buildCartContent(
+    BuildContext context,
+    CartController cart,
+    ProductController productController,
+    List<Product> products,
+    ThemeData theme,
+  ) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.all(kPaddingM),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FulfillmentSelector(
+            isDelivery: _isDelivery,
+            onChanged: (val) => setState(() => _isDelivery = val),
+          ),
+          const SizedBox(height: kPaddingM),
+          _buildLocationCard(context, theme),
+          const SizedBox(height: kPaddingL),
+          Text(
+            kOrderItems,
+            style: theme.textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: kPaddingS),
+          ...cart.items.entries.map((entry) {
+            final product = products.firstWhere((p) => p.id == entry.key,
+                orElse: () => Product.empty(entry.key));
+            return CartItemTile(
+              product: product,
+              quantity: entry.value,
+              onAdd: () => cart.addItem(product.id),
+              onRemove: () => cart.removeItem(product.id),
+            );
+          }),
+          const SizedBox(height: kPaddingL),
+          _buildYouMayAlsoLike(cart, productController, theme),
+          const SizedBox(height: kPaddingL),
+          _buildNoteSection(theme),
+          const SizedBox(height: kPaddingL),
+          OrderSummaryCard(
+            itemTotal: cart.getTotalPrice(products),
+            deliveryFee: 0.0, // Calculate based on city if needed
+          ),
+          const SizedBox(height: kPaddingL),
+          _buildActionButtons(context, cart, products, theme),
+          const SizedBox(height: kPaddingXL),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(
+    BuildContext context,
+    CartController cart,
+    List<Product> products,
+      ThemeData theme,
+  ) {
+    return ElevatedButton(
+      onPressed: _isPlacingOrder
+          ? null
+          : () => _handlePlaceOrder(context, cart, products, theme),
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 54),
+      ),
+      child: _isPlacingOrder
+          ? SizedBox(
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(
+                color: theme.colorScheme.onPrimary,
+                strokeWidth: 2,
+              ),
+            )
+          : const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(kPlaceOrderTitle, style: TextStyle(fontSize: 18)),
+                SizedBox(width: kPaddingS),
+                Icon(Icons.arrow_forward_ios, size: 16),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildLocationCard(BuildContext context, ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    return Consumer<AddressController>(
+      builder: (context, addressController, _) {
+        final displayAddress = addressController.selectedAddress;
+
+        final addressText = _isDelivery
+            ? (displayAddress?.fullAddress ?? "Select delivery address")
+            : "$selectedCity Branch";
+        final cityText = displayAddress?.city ?? selectedCity;
+
+        return Card(
+          child: InkWell(
+            onTap: () async {
+              if (_isDelivery) {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SavedAddressesPage(isSelectionMode: true),
+                  ),
+                );
+                if (result != null && result is Address) {
+                  addressController.setSelectedAddress(result);
+                }
+              } else {
+                _showLocationPicker(context, theme);
+              }
+            },
+            borderRadius: BorderRadius.circular(kRadiusM),
+            child: Padding(
+              padding: const EdgeInsets.all(kPaddingM),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(kPaddingS),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(kRadiusS),
+                    ),
+                    child: Icon(
+                      _isDelivery ? Icons.location_on : Icons.store,
+                      color: colorScheme.primary,
+                      size: kIconMedium,
+                    ),
+                  ),
+                  const SizedBox(width: kPaddingM),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _isDelivery ? kDeliveryAddress : kPickupFrom,
+                          style: theme.textTheme.labelSmall
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
+                        ),
+                        Text(
+                          _isDelivery
+                              ? (displayAddress != null ? "$cityText: $addressText" : addressText)
+                              : addressText,
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLocationPicker(BuildContext context, ThemeData theme) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(kRadiusXL)),
+      ),
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(kPaddingL),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Select City", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            _buildCityItem("BENGALURU"),
-            _buildCityItem("Mandya"),
-            _buildCityItem("Mysore"),
-            _buildCityItem("TUMKUR"),
-            _buildCityItem("Hosur"),
+            Text(
+              _isDelivery ? kSelectCity : kSelectBranch,
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: kPaddingM),
+            ...["BENGALURU", "Mandya", "Mysore", "TUMKUR", "Hosur"]
+                .map((city) => _buildCityItem(city, theme)),
+            const SizedBox(height: kPaddingM),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCityItem(String name) {
+  Widget _buildCityItem(String name, ThemeData theme) {
+    final colorScheme = theme.colorScheme;
     return ListTile(
-      leading: const Icon(Icons.location_city, color: kGold),
-      title: Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
+      leading: Icon(Icons.location_city, color: colorScheme.primary),
+      title: Text(name, style: theme.textTheme.bodyLarge),
+      trailing: selectedCity == name
+          ? Icon(Icons.check_circle, color: colorScheme.primary)
+          : null,
       onTap: () {
-        setState(() {
-          selectedCity = name;
-        });
+        setState(() => selectedCity = name);
         Navigator.pop(context);
       },
     );
   }
 
-  Widget _buildCartItems(CartController cart, List<Product> products) {
-    return Column(
-      children: cart.items.entries.map((entry) {
-        final product = products.firstWhere((p) => p.id == entry.key);
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.check_box_outline_blank, color: Colors.green, size: 16),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text("₹${product.price}", style: const TextStyle(color: kTextMuted)),
-                  ],
-                ),
-              ),
-              _buildQuantitySelector(cart, product, entry.value),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
+  Widget _buildYouMayAlsoLike(
+    CartController cart,
+    ProductController productController,
+    ThemeData theme,
+  ) {
+    final recommendations =
+        productController.getRecommendations(cart.items.keys.toList());
+    if (recommendations.isEmpty) return const SizedBox.shrink();
+    final colorScheme = theme.colorScheme;
 
-  Widget _buildQuantitySelector(CartController cart, Product product, int quantity) {
-    return Container(
-      decoration: BoxDecoration(
-        color: kGold.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.remove, size: 16, color: kGold),
-            onPressed: () => cart.removeItem(product.id),
-          ),
-          Text("$quantity", style: const TextStyle(fontWeight: FontWeight.bold, color: kGold)),
-          IconButton(
-            icon: const Icon(Icons.add, size: 16, color: kGold),
-            onPressed: () => cart.addItem(product.id),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildYouMayAlsoLike() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("You may also like!", style: TextStyle(color: kGold, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
+        Text(
+          kYouMayLike,
+          style: theme.textTheme.titleSmall
+              ?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: kPaddingS),
         SizedBox(
-          height: 120,
-          child: ListView(
+          height: 110,
+          child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            children: [
-              _buildSmallProductCard("Kaju Katli", "319.05"),
-              _buildSmallProductCard("Motichoor Laddu", "219.05"),
-            ],
+            physics: const BouncingScrollPhysics(),
+            itemCount: recommendations.length,
+            itemBuilder: (context, index) =>
+                _buildSmallProductCard(context, cart, recommendations[index], theme),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSmallProductCard(String name, String price) {
-    return Container(
-      width: 250,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: kCream,
-              borderRadius: BorderRadius.circular(12),
+  Widget _buildSmallProductCard(
+    BuildContext context,
+    CartController cart,
+    Product product,
+    ThemeData theme,
+  ) {
+    final colorScheme = theme.colorScheme;
+    return Card(
+      margin: const EdgeInsets.only(right: kPaddingM, bottom: kPaddingXS),
+      child: Container(
+        width: 260,
+        padding: const EdgeInsets.all(kPaddingS),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(kRadiusS),
+              child: product.image != null && product.image!.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: product.image!,
+                      width: 70,
+                      height: 70,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => _buildPlaceholder(product, theme),
+                      errorWidget: (context, url, error) =>
+                          _buildPlaceholder(product, theme),
+                    )
+                  : _buildPlaceholder(product, theme, 70),
             ),
-            child: const Icon(Icons.image_outlined, color: kGold),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text("₹$price", style: const TextStyle(color: kTextMuted, fontSize: 12)),
-              ],
-            ),
-          ),
-          const Icon(Icons.add_circle, color: kGold),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNoteSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.edit_note, color: kGold),
-          SizedBox(width: 12),
-          Text("Add a note for Annamalaiyar", style: TextStyle(fontWeight: FontWeight.w500)),
-          Spacer(),
-          Icon(Icons.chevron_right, color: kTextMuted),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBillDetails(CartController cart, List<Product> products) {
-    final total = cart.getTotalPrice(products);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        children: [
-          _buildBillRow("Item Total", "₹$total"),
-          _buildBillRow("Delivery Fee", "₹0.00"),
-          const Divider(),
-          _buildBillRow("Total Amount", "₹$total", isTotal: true),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBillRow(String label, String value, {bool isTotal = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              fontSize: isTotal ? 16 : 14,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              fontSize: isTotal ? 16 : 14,
-              color: isTotal ? kGold : kText,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomBar(BuildContext context, CartController cart, List<Product> products) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
-      ),
-      child: ElevatedButton(
-        onPressed: _isPlacingOrder ? null : () => _handlePlaceOrder(context, cart, products),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: kGold,
-          minimumSize: const Size(double.infinity, 54),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
-        child: _isPlacingOrder
-            ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-            : const Row(
+            const SizedBox(width: kPaddingS),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Place Order",
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    product.name,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                  Text(
+                    "$kCurrency${product.price}",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
+            ),
+            IconButton(
+              icon: Icon(
+                Icons.add_circle,
+                color: colorScheme.primary,
+                size: kIconLarge,
+              ),
+              onPressed: () => cart.addItem(product.id),
+              padding: EdgeInsets.zero,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Future<void> _handlePlaceOrder(BuildContext context, CartController cart, List<Product> products) async {
+  Widget _buildPlaceholder(Product product, ThemeData theme, [double size = 24]) =>
+      Container(
+        width: size,
+        height: size,
+        color: theme.colorScheme.surfaceContainerHighest,
+        child: Center(
+            child: Text(product.emoji, style: TextStyle(fontSize: size * 0.4))),
+      );
+
+  Widget _buildNoteSection(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    return Card(
+      child: ListTile(
+        leading: Icon(Icons.edit_note, color: colorScheme.primary),
+        title: Text(kAddNote, style: theme.textTheme.bodyMedium),
+        trailing: Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+        onTap: () {},
+      ),
+    );
+  }
+
+  Future<void> _handlePlaceOrder(
+    BuildContext context,
+    CartController cart,
+    List<Product> products,
+      ThemeData theme,
+  ) async {
     final orderController = context.read<OrderController>();
+    final addressController = context.read<AddressController>();
     final total = cart.getTotalPrice(products);
-    
-    setState(() => _isPlacingOrder = true);
 
-    final apiOrder = await ApiService.placeOrder(address, selectedCity, "whatsapp");
+    Address? finalAddress = addressController.selectedAddress;
 
-    setState(() => _isPlacingOrder = false);
-
-    if (apiOrder == null) {
-      if (!context.mounted) return;
+    if (_isDelivery && finalAddress == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to place order. Please try again.")),
+        const SnackBar(content: Text("Please select a delivery address")),
       );
       return;
     }
 
-    final orderId = apiOrder.id.toString();
+    setState(() => _isPlacingOrder = true);
+
+    final String orderAddress = _isDelivery
+        ? "${finalAddress!.fullAddress}, ${finalAddress.city}"
+        : "STORE PICKUP";
+    final String orderCity = _isDelivery ? finalAddress!.city : selectedCity;
+
+    final apiOrderResult = await orderController.placeOrder(
+        orderAddress, orderCity, "whatsapp");
+
+    setState(() => _isPlacingOrder = false);
+
+    if (apiOrderResult.isFailure) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(apiOrderResult.exceptionOrNull.toString())),
+      );
+      return;
+    }
+
+    final apiOrder = apiOrderResult.valueOrNull;
+    final orderId = apiOrder?.id?.toString() ?? "PENDING";
     final List<OrderItem> items = cart.items.entries.map((entry) {
-      final product = products.firstWhere((p) => p.id == entry.key);
+      final product = products.firstWhere((p) => p.id == entry.key,
+          orElse: () => Product.empty(entry.key));
       return OrderItem(product: product, quantity: entry.value);
     }).toList();
 
     // Generate WhatsApp message
-    String message = "Hello Annamalaiyar Chettinadu Snacks, I'd like to place an order!\n\n";
+    String message =
+        "Hello Annamalaiyar Chettinadu Snacks, I'd like to place an order!\n\n";
     message += "Order ID: #$orderId\n";
-    message += "City: $selectedCity\n\n";
-    message += "Items:\n";
+    message += "Method: ${_isDelivery ? kDelivery : kStorePickup}\n";
+    message += "City: $orderCity\n";
+    if (_isDelivery) {
+      message += "Address: $orderAddress\n";
+    }
+    message += "\nItems:\n";
     for (var item in items) {
-      message += "- ${item.product.name} x ${item.quantity}: ₹${(item.product.price * item.quantity).toStringAsFixed(2)}\n";
+      message +=
+          "- ${item.product.name} x ${item.quantity}: ₹${(item.product.price * item.quantity).toStringAsFixed(2)}\n";
     }
     message += "\nTotal Amount: ₹${total.toStringAsFixed(2)}";
 
-    final whatsappUrl = "whatsapp://send?phone=+918681020301&text=${Uri.encodeComponent(message)}";
-    
+    final whatsappUrl =
+        "whatsapp://send?phone=+918681020301&text=${Uri.encodeComponent(message)}";
+
     if (!context.mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Icon(Icons.check_circle, color: Colors.green, size: 60),
+        title: const Icon(Icons.check_circle, color: kVegColor, size: 60),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("Order Placed Successfully!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(kOrderSuccess,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(height: 8),
-            Text("Order ID: #$orderId", style: const TextStyle(color: kTextMuted)),
+            Text("$kOrderIdPrefix$orderId",
+                style: theme.textTheme.bodySmall),
             const SizedBox(height: 16),
-            const Text("Click OK to confirm your order on WhatsApp."),
+            const Text(kWhatsAppConfirm),
           ],
         ),
         actions: [
@@ -510,13 +528,18 @@ class _CartPageState extends State<CartPage> {
                 Navigator.of(dialogContext).pop(); // pop dialog
               }
               if (context.mounted) {
-                Navigator.of(context).pop(); // pop cart page
+                final mainScreen = MainScreen.of(context);
+                // Return to main screen / home stack
+                Navigator.of(context).popUntil((route) => route.isFirst);
+                // Switch to home tab
+                mainScreen?.setIndex(0);
               }
               if (await canLaunchUrl(Uri.parse(whatsappUrl))) {
                 await launchUrl(Uri.parse(whatsappUrl));
               }
             },
-            child: const Text("OK", style: TextStyle(color: kGold, fontWeight: FontWeight.bold)),
+            child: Text(kOk,
+                style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

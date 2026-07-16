@@ -86,7 +86,11 @@ class CategoryBuilder implements Builder<Category, CategoryBuilder> {
   Category build() => _build();
 
   _$Category _build() {
-    final _$result = _$v ?? _$Category._(id: id, name: name);
+    final _$result = _$v ??
+        _$Category._(
+          id: id,
+          name: name,
+        );
     replace(_$result);
     return _$result;
   }

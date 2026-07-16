@@ -73,3 +73,32 @@ export const messages = pgTable('messages', {
   isRead: boolean('is_read').notNull().default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+
+export const addresses = pgTable('addresses', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  street: varchar('street', { length: 255 }).notNull(),
+  city: varchar('city', { length: 100 }).notNull(),
+  state: varchar('state', { length: 100 }).notNull(),
+  zipCode: varchar('zip_code', { length: 20 }).notNull(),
+  country: varchar('country', { length: 100 }).notNull(),
+  addressType: varchar('address_type', { length: 50 }).default('home'), // home, work, billing, shipping
+  isDefault: boolean('is_default').default(false),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const reviews = pgTable('reviews', {
+  id: serial('id').primaryKey(),
+  productId: integer('product_id')
+    .notNull()
+    .references(() => products.id, { onDelete: 'cascade' }),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  rating: integer('rating').notNull(),
+  comment: text('comment'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});

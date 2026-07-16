@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,8 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final cart = context.watch<CartController>();
     final qty = cart.items[product.id] ?? 0;
 
@@ -28,9 +31,16 @@ class ProductCard extends StatelessWidget {
       onTap: () => _showProductDetails(context),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: kGold.withValues(alpha: 0.1)),
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(kRadiusM),
+          border: Border.all(color: colorScheme.outline.withValues(alpha: 0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,19 +51,42 @@ class ProductCard extends StatelessWidget {
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: kGoldPale,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                      gradient: const LinearGradient(
+                      color: colorScheme.surfaceContainerHighest,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(kRadiusM)),
+                      gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [kGoldPale, Color(0xFFFFF0D8)],
+                        colors: [
+                          colorScheme.surfaceContainerHighest,
+                          colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+                        ],
                       ),
                     ),
-                    child: Center(
-                      child: Hero(
-                        tag: 'product-${product.id}',
-                        child: Text(product.emoji, style: const TextStyle(fontSize: 60)),
-                      ),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(kRadiusM)),
+                      child: product.image != null && product.image!.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: product.image!,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Center(
+                                child: Hero(
+                                  tag: 'product-${product.id}',
+                                  child: Text(product.emoji, style: const TextStyle(fontSize: 60)),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Center(
+                                child: Hero(
+                                  tag: 'product-${product.id}',
+                                  child: Text(product.emoji, style: const TextStyle(fontSize: 60)),
+                                ),
+                              ),
+                            )
+                          : Center(
+                              child: Hero(
+                                tag: 'product-${product.id}',
+                                child: Text(product.emoji, style: const TextStyle(fontSize: 60)),
+                              ),
+                            ),
                     ),
                   ),
                   if (product.badge != null)
@@ -63,12 +96,15 @@ class ProductCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: kRed,
+                          color: colorScheme.secondary,
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: Text(
                           product.badge!,
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colorScheme.onSecondary,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -79,14 +115,14 @@ class ProductCard extends StatelessWidget {
                       width: 20,
                       height: 20,
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.green, width: 2),
+                        border: Border.all(color: kVegColor, width: 2),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Center(
                         child: Container(
                           width: 10,
                           height: 10,
-                          decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.green),
+                          decoration: const BoxDecoration(shape: BoxShape.circle, color: kVegColor),
                         ),
                       ),
                     ),
@@ -95,20 +131,20 @@ class ProductCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(kPaddingM),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     product.name,
-                    style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     product.desc,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11, color: kTextMuted),
+                    style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -117,11 +153,18 @@ class ProductCard extends StatelessWidget {
                               margin: const EdgeInsets.only(right: 4),
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: kGoldPale,
+                                color: colorScheme.primaryContainer.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(100),
-                                border: Border.all(color: kGold.withValues(alpha: 0.2)),
+                                border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
                               ),
-                              child: Text(t, style: const TextStyle(color: kGold, fontSize: 9, fontWeight: FontWeight.bold)),
+                              child: Text(
+                                t,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 8,
+                                ),
+                              ),
                             ))
                         .toList(),
                   ),
@@ -131,12 +174,18 @@ class ProductCard extends StatelessWidget {
                     children: [
                       RichText(
                         text: TextSpan(
-                          style: const TextStyle(color: kText, fontSize: 18, fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
+                          ),
                           children: [
                             TextSpan(text: "₹${product.price.toStringAsFixed(0)}"),
                             TextSpan(
                               text: " / ${product.unit}",
-                              style: const TextStyle(fontSize: 11, color: kTextMuted, fontWeight: FontWeight.normal),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.normal,
+                              ),
                             ),
                           ],
                         ),
@@ -145,25 +194,34 @@ class ProductCard extends StatelessWidget {
                         IconButton.filled(
                           onPressed: () => context.read<CartController>().addItem(product.id),
                           icon: const Icon(Icons.add, size: 20),
-                          style: IconButton.styleFrom(backgroundColor: kDark, foregroundColor: kGoldLight),
+                          style: IconButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
+                          ),
                         )
                       else
                         Container(
                           decoration: BoxDecoration(
-                            color: kDark,
+                            color: colorScheme.primary,
                             borderRadius: BorderRadius.circular(100),
                           ),
                           child: Row(
                             children: [
                               IconButton(
                                 onPressed: () => context.read<CartController>().removeItem(product.id),
-                                icon: const Icon(Icons.remove, size: 16, color: kGoldLight),
+                                icon: Icon(Icons.remove, size: 16, color: colorScheme.onPrimary),
                                 visualDensity: VisualDensity.compact,
                               ),
-                              Text(qty.toString(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              Text(
+                                qty.toString(),
+                                style: TextStyle(
+                                  color: colorScheme.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               IconButton(
                                 onPressed: () => context.read<CartController>().addItem(product.id),
-                                icon: const Icon(Icons.add, size: 16, color: kGoldLight),
+                                icon: Icon(Icons.add, size: 16, color: colorScheme.onPrimary),
                                 visualDensity: VisualDensity.compact,
                               ),
                             ],

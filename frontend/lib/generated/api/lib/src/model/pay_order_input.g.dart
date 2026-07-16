@@ -37,9 +37,9 @@ class _$PayOrderInput extends PayOrderInput {
 
   @override
   String toString() {
-    return (newBuiltValueToStringHelper(
-      r'PayOrderInput',
-    )..add('transactionRef', transactionRef)).toString();
+    return (newBuiltValueToStringHelper(r'PayOrderInput')
+          ..add('transactionRef', transactionRef))
+        .toString();
   }
 }
 
@@ -79,14 +79,10 @@ class PayOrderInputBuilder
   PayOrderInput build() => _build();
 
   _$PayOrderInput _build() {
-    final _$result =
-        _$v ??
+    final _$result = _$v ??
         _$PayOrderInput._(
           transactionRef: BuiltValueNullFieldError.checkNotNull(
-            transactionRef,
-            r'PayOrderInput',
-            'transactionRef',
-          ),
+              transactionRef, r'PayOrderInput', 'transactionRef'),
         );
     replace(_$result);
     return _$result;

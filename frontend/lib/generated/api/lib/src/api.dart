@@ -14,6 +14,7 @@ import 'package:e_shop_api/src/api/cart_api.dart';
 import 'package:e_shop_api/src/api/categories_api.dart';
 import 'package:e_shop_api/src/api/orders_api.dart';
 import 'package:e_shop_api/src/api/products_api.dart';
+import 'package:e_shop_api/src/api/reviews_api.dart';
 
 class EShopApi {
   static const String basePath = r'http://localhost:3000';
@@ -97,5 +98,11 @@ class EShopApi {
   /// by doing that all interceptors will not be executed
   ProductsApi getProductsApi() {
     return ProductsApi(dio, serializers);
+  }
+
+  /// Get ReviewsApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ReviewsApi getReviewsApi() {
+    return ReviewsApi(dio, serializers);
   }
 }

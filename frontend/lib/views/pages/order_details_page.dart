@@ -9,65 +9,65 @@ class OrderDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Order Details'),
-        backgroundColor: Colors.white,
-        foregroundColor: kDark,
-        elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(kPaddingM),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStatusHeader(),
-            const SizedBox(height: 24),
-            const Text('ORDER ITEMS', style: TextStyle(fontWeight: FontWeight.bold, color: kTextMuted, fontSize: 12, letterSpacing: 1.2)),
-            const SizedBox(height: 12),
-            _buildItemsList(),
-            const Divider(height: 32),
-            _buildSummary(),
-            const SizedBox(height: 24),
-            const Text('DELIVERY ADDRESS', style: TextStyle(fontWeight: FontWeight.bold, color: kTextMuted, fontSize: 12, letterSpacing: 1.2)),
-            const SizedBox(height: 12),
-            _buildAddress(),
+            _buildStatusHeader(theme),
+            const SizedBox(height: kPaddingL),
+            Text('ORDER ITEMS', style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurfaceVariant, letterSpacing: 1.2)),
+            const SizedBox(height: kPaddingM),
+            _buildItemsList(theme),
+            const Divider(height: kPaddingXL),
+            _buildSummary(theme),
+            const SizedBox(height: kPaddingL),
+            Text('DELIVERY ADDRESS', style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurfaceVariant, letterSpacing: 1.2)),
+            const SizedBox(height: kPaddingM),
+            _buildAddress(theme),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatusHeader() {
+  Widget _buildStatusHeader(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(kPaddingM),
       decoration: BoxDecoration(
-        color: kGoldPale,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kGold.withValues(alpha: 0.2)),
+        color: colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(kRadiusM),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.receipt_long, color: kGold, size: 32),
-          const SizedBox(width: 16),
+          Icon(Icons.receipt_long, color: colorScheme.primary, size: kIconLarge),
+          const SizedBox(width: kPaddingM),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Order #${order.id.toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(DateFormat('MMM dd, yyyy • hh:mm a').format(order.date), style: TextStyle(color: kTextMuted, fontSize: 13)),
+                Text('Order #${order.id.toUpperCase()}', style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+                Text(DateFormat('MMM dd, yyyy • hh:mm a').format(order.date), style: theme.textTheme.bodySmall),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: kPaddingS, vertical: kPaddingXS),
             decoration: BoxDecoration(
-              color: kGold,
-              borderRadius: BorderRadius.circular(20),
+              color: colorScheme.primary,
+              borderRadius: BorderRadius.circular(kRadiusXL),
             ),
             child: Text(
               order.status.name.toUpperCase(),
-              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+              style: TextStyle(color: colorScheme.onPrimary, fontSize: 10, fontWeight: FontWeight.bold),
             ),
           )
         ],
@@ -75,72 +75,68 @@ class OrderDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildItemsList() {
+  Widget _buildItemsList(ThemeData theme) {
     return Column(
       children: order.items.map((item) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.only(bottom: kPaddingM),
         child: Row(
           children: [
             Text(item.product.emoji, style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: 12),
+            const SizedBox(width: kPaddingM),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.product.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text('${item.quantity} x ${item.product.unit}', style: TextStyle(color: kTextMuted, fontSize: 12)),
+                  Text(item.product.name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                  Text('${item.quantity} x ${item.product.unit}', style: theme.textTheme.bodySmall),
                 ],
               ),
             ),
-            Text('₹${(item.product.price * item.quantity).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text('$kCurrency${(item.product.price * item.quantity).toStringAsFixed(2)}', style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
           ],
         ),
       )).toList(),
     );
   }
 
-  Widget _buildSummary() {
+  Widget _buildSummary(ThemeData theme) {
     return Column(
       children: [
-        _summaryRow('Subtotal', '₹${order.totalAmount.toStringAsFixed(2)}'),
-        const SizedBox(height: 8),
-        _summaryRow('Delivery Fee', 'FREE', isGreen: true),
-        const Divider(height: 24),
-        _summaryRow('Total', '₹${order.totalAmount.toStringAsFixed(2)}', isBold: true),
+        _summaryRow(theme, 'Subtotal', '$kCurrency${order.totalAmount.toStringAsFixed(2)}'),
+        const SizedBox(height: kPaddingS),
+        _summaryRow(theme, 'Delivery Fee', 'FREE', isGreen: true),
+        const Divider(height: kPaddingXL),
+        _summaryRow(theme, 'Total', '$kCurrency${order.totalAmount.toStringAsFixed(2)}', isBold: true),
       ],
     );
   }
 
-  Widget _summaryRow(String label, String value, {bool isBold = false, bool isGreen = false}) {
+  Widget _summaryRow(ThemeData theme, String label, String value, {bool isBold = false, bool isGreen = false}) {
+    final colorScheme = theme.colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, fontSize: isBold ? 16 : 14)),
-        Text(value, style: TextStyle(
+        Text(label, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+        Text(value, style: theme.textTheme.bodyLarge?.copyWith(
           fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-          fontSize: isBold ? 16 : 14,
-          color: isGreen ? Colors.green : (isBold ? kRed : kText),
+          color: isGreen ? kVegColor : (isBold ? colorScheme.primary : colorScheme.onSurface),
         )),
       ],
     );
   }
 
-  Widget _buildAddress() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(order.city, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(order.address, style: TextStyle(color: kTextMuted)),
-        ],
+  Widget _buildAddress(ThemeData theme) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(kPaddingM),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(order.city, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: kPaddingXS),
+            Text(order.address, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          ],
+        ),
       ),
     );
   }

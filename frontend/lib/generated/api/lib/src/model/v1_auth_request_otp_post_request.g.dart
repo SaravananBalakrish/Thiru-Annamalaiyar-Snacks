@@ -10,15 +10,15 @@ class _$V1AuthRequestOtpPostRequest extends V1AuthRequestOtpPostRequest {
   @override
   final String phone;
 
-  factory _$V1AuthRequestOtpPostRequest([
-    void Function(V1AuthRequestOtpPostRequestBuilder)? updates,
-  ]) => (V1AuthRequestOtpPostRequestBuilder()..update(updates))._build();
+  factory _$V1AuthRequestOtpPostRequest(
+          [void Function(V1AuthRequestOtpPostRequestBuilder)? updates]) =>
+      (V1AuthRequestOtpPostRequestBuilder()..update(updates))._build();
 
   _$V1AuthRequestOtpPostRequest._({required this.phone}) : super._();
   @override
   V1AuthRequestOtpPostRequest rebuild(
-    void Function(V1AuthRequestOtpPostRequestBuilder) updates,
-  ) => (toBuilder()..update(updates)).build();
+          void Function(V1AuthRequestOtpPostRequestBuilder) updates) =>
+      (toBuilder()..update(updates)).build();
 
   @override
   V1AuthRequestOtpPostRequestBuilder toBuilder() =>
@@ -40,18 +40,16 @@ class _$V1AuthRequestOtpPostRequest extends V1AuthRequestOtpPostRequest {
 
   @override
   String toString() {
-    return (newBuiltValueToStringHelper(
-      r'V1AuthRequestOtpPostRequest',
-    )..add('phone', phone)).toString();
+    return (newBuiltValueToStringHelper(r'V1AuthRequestOtpPostRequest')
+          ..add('phone', phone))
+        .toString();
   }
 }
 
 class V1AuthRequestOtpPostRequestBuilder
     implements
-        Builder<
-          V1AuthRequestOtpPostRequest,
-          V1AuthRequestOtpPostRequestBuilder
-        > {
+        Builder<V1AuthRequestOtpPostRequest,
+            V1AuthRequestOtpPostRequestBuilder> {
   _$V1AuthRequestOtpPostRequest? _$v;
 
   String? _phone;
@@ -85,14 +83,10 @@ class V1AuthRequestOtpPostRequestBuilder
   V1AuthRequestOtpPostRequest build() => _build();
 
   _$V1AuthRequestOtpPostRequest _build() {
-    final _$result =
-        _$v ??
+    final _$result = _$v ??
         _$V1AuthRequestOtpPostRequest._(
           phone: BuiltValueNullFieldError.checkNotNull(
-            phone,
-            r'V1AuthRequestOtpPostRequest',
-            'phone',
-          ),
+              phone, r'V1AuthRequestOtpPostRequest', 'phone'),
         );
     replace(_$result);
     return _$result;

@@ -6,15 +6,17 @@ import '../services/storage_service.dart';
 
 import '../utils/error_handler_mixin.dart';
 
+import '../utils/result.dart';
+
 class OrderController extends ChangeNotifier with ErrorHandlerMixin {
   List<OrderModel> _orders = [];
   List<OrderModel> get orders => _orders;
 
-  Future<void> loadOrders(List<Product> availableProducts) async {
+  Future<Result<void>> loadOrders(List<Product> availableProducts) async {
     final token = await StorageService.getToken();
-    if (token == null) return;
+    if (token == null) return Result.success(null);
 
-    await runSafe(() async {
+    return await runSafeResult(() async {
       final apiOrders = await ApiService.fetchOrders();
       _orders = apiOrders.map((o) {
         return OrderModel(
@@ -41,6 +43,13 @@ class OrderController extends ChangeNotifier with ErrorHandlerMixin {
           address: 'N/A',
         );
       }).toList();
+    });
+  }
+
+  Future<Result<dynamic>> placeOrder(String address, String city, String paymentMethod) async {
+    return await runSafeResult(() async {
+      final response = await ApiService.placeOrder(address, city, paymentMethod);
+      return response;
     });
   }
 

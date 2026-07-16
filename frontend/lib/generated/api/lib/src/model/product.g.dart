@@ -23,14 +23,14 @@ class _$Product extends Product {
   factory _$Product([void Function(ProductBuilder)? updates]) =>
       (ProductBuilder()..update(updates))._build();
 
-  _$Product._({
-    this.id,
-    this.name,
-    this.description,
-    this.price,
-    this.imageUrl,
-    this.categoryId,
-  }) : super._();
+  _$Product._(
+      {this.id,
+      this.name,
+      this.description,
+      this.price,
+      this.imageUrl,
+      this.categoryId})
+      : super._();
   @override
   Product rebuild(void Function(ProductBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -135,8 +135,7 @@ class ProductBuilder implements Builder<Product, ProductBuilder> {
   Product build() => _build();
 
   _$Product _build() {
-    final _$result =
-        _$v ??
+    final _$result = _$v ??
         _$Product._(
           id: id,
           name: name,

@@ -31,18 +31,18 @@ class _$Order extends Order {
   factory _$Order([void Function(OrderBuilder)? updates]) =>
       (OrderBuilder()..update(updates))._build();
 
-  _$Order._({
-    this.id,
-    this.userId,
-    this.totalPrice,
-    this.createdAt,
-    this.paymentMethod,
-    this.paymentStatus,
-    this.transactionRef,
-    this.upiUri,
-    this.qrCodeUrl,
-    this.items,
-  }) : super._();
+  _$Order._(
+      {this.id,
+      this.userId,
+      this.totalPrice,
+      this.createdAt,
+      this.paymentMethod,
+      this.paymentStatus,
+      this.transactionRef,
+      this.upiUri,
+      this.qrCodeUrl,
+      this.items})
+      : super._();
   @override
   Order rebuild(void Function(OrderBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -185,8 +185,7 @@ class OrderBuilder implements Builder<Order, OrderBuilder> {
   _$Order _build() {
     _$Order _$result;
     try {
-      _$result =
-          _$v ??
+      _$result = _$v ??
           _$Order._(
             id: id,
             userId: userId,

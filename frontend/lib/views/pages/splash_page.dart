@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../services/storage_service.dart';
-import 'main_screen.dart';
-import 'auth/login_page.dart';
 import '../../constants.dart';
 
 class SplashPage extends StatefulWidget {
@@ -27,22 +25,19 @@ class _SplashPageState extends State<SplashPage> {
     if (!mounted) return;
     
     if (token != null && token.isNotEmpty) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const MainScreen()),
-      );
+      Navigator.pushReplacementNamed(context, '/home');
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Scaffold(
-      backgroundColor: kCream,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -52,12 +47,19 @@ class _SplashPageState extends State<SplashPage> {
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: kGold.withValues(alpha: 0.2), width: 1),
+                border: Border.all(
+                  color: colorScheme.primary.withValues(alpha: 0.2),
+                  width: 1,
+                ),
               ),
-              child: const Icon(Icons.bakery_dining, size: 60, color: kGold),
+              child: Icon(
+                Icons.bakery_dining,
+                size: 60,
+                color: colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 24),
-            const CircularProgressIndicator(color: kGold),
+            CircularProgressIndicator(color: colorScheme.primary),
           ],
         ),
       ),

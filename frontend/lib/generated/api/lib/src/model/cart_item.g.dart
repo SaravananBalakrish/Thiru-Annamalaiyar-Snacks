@@ -100,9 +100,12 @@ class CartItemBuilder implements Builder<CartItem, CartItemBuilder> {
   _$CartItem _build() {
     _$CartItem _$result;
     try {
-      _$result =
-          _$v ??
-          _$CartItem._(id: id, quantity: quantity, product: _product?.build());
+      _$result = _$v ??
+          _$CartItem._(
+            id: id,
+            quantity: quantity,
+            product: _product?.build(),
+          );
     } catch (_) {
       late String _$failedField;
       try {
@@ -110,10 +113,7 @@ class CartItemBuilder implements Builder<CartItem, CartItemBuilder> {
         _product?.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(
-          r'CartItem',
-          _$failedField,
-          e.toString(),
-        );
+            r'CartItem', _$failedField, e.toString());
       }
       rethrow;
     }

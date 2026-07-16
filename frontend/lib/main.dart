@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:thiru_annamalaiyar_snacks/services/storage_service.dart';
 import 'controllers/cart_controller.dart';
 import 'controllers/order_controller.dart';
 import 'controllers/product_controller.dart';
+import 'controllers/address_controller.dart';
 import 'views/pages/auth/login_page.dart';
 import 'views/pages/splash_page.dart';
+import 'views/pages/main_screen.dart';
 import 'constants.dart';
+import 'utils/theme.dart';
 
-final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await StorageService.init();
+  await _requestPermissions();
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CartController()),
         ChangeNotifierProvider(create: (_) => OrderController()),
+        ChangeNotifierProvider(create: (_) => AddressController()),
         ChangeNotifierProvider(
           create: (context) => ProductController(
             orderController: context.read<OrderController>(),
@@ -26,6 +31,13 @@ void main() {
       child: const AnnamalaiyarApp(),
     ),
   );
+}
+
+Future<void> _requestPermissions() async {
+  await [
+    Permission.location,
+    Permission.notification,
+  ].request();
 }
 
 class AnnamalaiyarApp extends StatelessWidget {
@@ -38,20 +50,17 @@ class AnnamalaiyarApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: scaffoldMessengerKey,
       navigatorKey: navigatorKey,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: kGold,
-          primary: kGold,
-          secondary: kRed,
-          surface: Colors.white,
-        ),
-        textTheme: GoogleFonts.latoTextTheme(),
-        scaffoldBackgroundColor: kCream,
-      ),
-      home: const SplashPage(),
+      themeMode: ThemeMode.system,
+      theme: AppTheme.darkTheme,
+      darkTheme: AppTheme.darkTheme,
+      initialRoute: '/',
       routes: {
+        '/': (context) => const SplashPage(),
         '/login': (context) => const LoginPage(),
+        '/home': (context) => const MainScreen(initialIndex: 0),
+        '/menu': (context) => const MainScreen(initialIndex: 1),
+        '/cart': (context) => const MainScreen(initialIndex: 2),
+        '/settings': (context) => const MainScreen(initialIndex: 3),
       },
     );
   }

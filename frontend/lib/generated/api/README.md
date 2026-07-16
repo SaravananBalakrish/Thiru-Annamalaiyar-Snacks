@@ -84,6 +84,12 @@ Class | Method | HTTP request | Description
 [*ProductsApi*](doc/ProductsApi.md) | [**v1ProductsIdGet**](doc/ProductsApi.md#v1productsidget) | **GET** /v1/products/{id} | Get a product by ID
 [*ProductsApi*](doc/ProductsApi.md) | [**v1ProductsIdPut**](doc/ProductsApi.md#v1productsidput) | **PUT** /v1/products/{id} | Update a product
 [*ProductsApi*](doc/ProductsApi.md) | [**v1ProductsPost**](doc/ProductsApi.md#v1productspost) | **POST** /v1/products | Create a new product
+[*ReviewsApi*](doc/ReviewsApi.md) | [**v1ReviewsGet**](doc/ReviewsApi.md#v1reviewsget) | **GET** /v1/reviews | List all reviews (Admin)
+[*ReviewsApi*](doc/ReviewsApi.md) | [**v1ReviewsIdDelete**](doc/ReviewsApi.md#v1reviewsiddelete) | **DELETE** /v1/reviews/{id} | Delete a review (Owner only)
+[*ReviewsApi*](doc/ReviewsApi.md) | [**v1ReviewsIdGet**](doc/ReviewsApi.md#v1reviewsidget) | **GET** /v1/reviews/{id} | Get a review by ID
+[*ReviewsApi*](doc/ReviewsApi.md) | [**v1ReviewsIdPut**](doc/ReviewsApi.md#v1reviewsidput) | **PUT** /v1/reviews/{id} | Update a review (Owner only)
+[*ReviewsApi*](doc/ReviewsApi.md) | [**v1ReviewsPost**](doc/ReviewsApi.md#v1reviewspost) | **POST** /v1/reviews | Create a new review
+[*ReviewsApi*](doc/ReviewsApi.md) | [**v1ReviewsProductProductIdGet**](doc/ReviewsApi.md#v1reviewsproductproductidget) | **GET** /v1/reviews/product/{productId} | List all reviews for a product
 
 
 ## Documentation For Models
@@ -99,6 +105,9 @@ Class | Method | HTTP request | Description
  - [PayOrderInput](doc/PayOrderInput.md)
  - [Product](doc/Product.md)
  - [ProductInput](doc/ProductInput.md)
+ - [Review](doc/Review.md)
+ - [ReviewInput](doc/ReviewInput.md)
+ - [ReviewUpdate](doc/ReviewUpdate.md)
  - [V1AuthRequestOtpPostRequest](doc/V1AuthRequestOtpPostRequest.md)
  - [V1AuthVerifyOtpPostRequest](doc/V1AuthVerifyOtpPostRequest.md)
 

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../constants.dart';
 import '../../models/product.dart';
-import '../../controllers/cart_controller.dart';
 import '../../controllers/product_controller.dart';
+import '../widgets/product_list_item.dart';
 import 'category_menu_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,8 +16,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String selectedCategory = 'all';
-
   @override
   void initState() {
     super.initState();
@@ -27,106 +26,178 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final cart = context.watch<CartController>();
-    final productController = context.watch<ProductController>();
-    
-    if (productController.isLoading) {
-      return const Center(child: CircularProgressIndicator(color: kGold));
-    }
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    if (productController.error != null) {
-      return Center(child: Text(productController.error!));
-    }
+    return RefreshIndicator(
+      onRefresh: () => context.read<ProductController>().loadProducts(),
+      color: colorScheme.primary,
+      child: Consumer<ProductController>(
+        builder: (context, productController, _) {
+          if (productController.isLoading) {
+            return const _ShimmerLoading();
+          }
 
-    final products = productController.products;
+          if (productController.error != null) {
+            return _buildErrorState(productController, colorScheme);
+          }
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildBanner(),
-          _buildMindSection(productController),
-          _buildRecommendedSection(cart, products),
-          const Footer(),
-        ],
+          final products = productController.products;
+
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _Banner(),
+                _MindSection(productController: productController),
+                _RecommendedSection(products: products),
+                const Footer(),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildBanner() {
+  Widget _buildErrorState(
+    ProductController productController,
+    ColorScheme colorScheme,
+  ) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            productController.error!,
+            style: TextStyle(color: colorScheme.error),
+          ),
+          const SizedBox(height: kPaddingM),
+          ElevatedButton(
+            onPressed: () => productController.loadProducts(),
+            child: const Text(kRetry),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class _Banner extends StatelessWidget {
+  const _Banner();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Container(
       height: 180,
       width: double.infinity,
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        image: const DecorationImage(
-          image: NetworkImage('https://images.unsplash.com/photo-1505253149613-112d21d9f6a9?q=80&w=1000&auto=format&fit=crop'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent],
-          ),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+      margin: const EdgeInsets.all(kPaddingM),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(kRadiusL),
+        child: Stack(
           children: [
-            const Text(
-              "TRIPLE BERRY SUNDAE",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            const Text(
-              "THIS SUNDAE IS UN-BERRY-LIEVABLY\nDELICIOUS!",
-              style: TextStyle(color: Colors.white70, fontSize: 10),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            CachedNetworkImage(
+              imageUrl:
+                  'https://images.unsplash.com/photo-1505253149613-112d21d9f6a9?q=80&w=1000&auto=format&fit=crop',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              placeholder: (context, url) => Container(
+                color: colorScheme.surfaceContainerHighest,
               ),
-              child: const Text("SHOP NOW", style: TextStyle(fontWeight: FontWeight.bold)),
+              errorWidget: (context, url, error) => Container(
+                color: colorScheme.surfaceContainerHighest,
+                child: const Icon(Icons.error),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  colors: [kBlack.withValues(alpha: 0.8), Colors.transparent],
+                ),
+              ),
+              padding: const EdgeInsets.all(kPaddingL),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "TRIPLE BERRY SUNDAE",
+                    style: theme.textTheme.titleLarge?.copyWith(color: kWhite),
+                  ),
+                  Text(
+                    "THIS SUNDAE IS UN-BERRY-LIEVABLY\nDELICIOUS!",
+                    style: theme.textTheme.bodySmall?.copyWith(color: kWhite.withValues(alpha: 0.7)),
+                  ),
+                  const SizedBox(height: kPaddingM),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kWhite,
+                      foregroundColor: kBlack,
+                      minimumSize: const Size(120, 36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: kPaddingM,
+                        vertical: kPaddingS,
+                      ),
+                    ),
+                    child: const Text(kShopNow),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildMindSection(ProductController productController) {
-    final dynamicCategories = productController.getCategories().where((c) => c != 'All').toList();
+class _MindSection extends StatelessWidget {
+  final ProductController productController;
 
-    String getImgForCategory(String name) {
-      if (name.toLowerCase() == 'sweets') return 'https://cdn-icons-png.flaticon.com/512/2513/2513831.png';
-      if (name.toLowerCase() == 'savoury') return 'https://cdn-icons-png.flaticon.com/512/3014/3014534.png';
-      if (name.toLowerCase() == 'bakery') return 'https://cdn-icons-png.flaticon.com/512/3014/3014498.png';
-      return 'https://cdn-icons-png.flaticon.com/512/3014/3014511.png'; // Generic snack icon
+  const _MindSection({required this.productController});
+
+  String getImgForCategory(String name) {
+    switch (name.toLowerCase()) {
+      case 'sweets':
+        return 'https://cdn-icons-png.flaticon.com/512/2513/2513831.png';
+      case 'savoury':
+        return 'https://cdn-icons-png.flaticon.com/512/3014/3014534.png';
+      case 'bakery':
+        return 'https://cdn-icons-png.flaticon.com/512/3014/3014498.png';
+      default:
+        return 'https://cdn-icons-png.flaticon.com/512/3014/3014511.png';
     }
+  }
 
-    if (dynamicCategories.isEmpty) {
-      return const SizedBox.shrink(); // Hide section if no categories
-    }
+  @override
+  Widget build(BuildContext context) {
+    final dynamicCategories =
+        productController.getCategories().where((c) => c != 'All').toList();
+    if (dynamicCategories.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: kPaddingM,
+            vertical: kPaddingS,
+          ),
           child: Text(
-            "WHAT'S ON YOUR MIND ?",
-            style: GoogleFonts.lato(
-              color: kGold,
+            kWhatsOnMind,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: colorScheme.primary,
               fontWeight: FontWeight.w900,
-              fontSize: 16,
               letterSpacing: 1.2,
             ),
           ),
@@ -135,44 +206,14 @@ class _HomePageState extends State<HomePage> {
           height: 120,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: kPaddingS),
+            physics: const BouncingScrollPhysics(),
             itemCount: dynamicCategories.length,
             itemBuilder: (context, index) {
               final catName = dynamicCategories[index];
-              return InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CategoryMenuPage(initialCategory: catName),
-                    ),
-                  );
-                },
-                child: Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 5)),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Image.network(getImgForCategory(catName)),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      catName,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: kText),
-                    ),
-                  ],
-                ),
+              return _CategoryItem(
+                name: catName,
+                imageUrl: getImgForCategory(catName),
               );
             },
           ),
@@ -180,105 +221,215 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
+}
 
-  Widget _buildRecommendedSection(CartController cart, List<Product> products) {
+class _CategoryItem extends StatelessWidget {
+  final String name;
+  final String imageUrl;
+
+  const _CategoryItem({required this.name, required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CategoryMenuPage(initialCategory: name),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(kRadiusL),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            margin: const EdgeInsets.symmetric(horizontal: kPaddingS),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(kRadiusL),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.shadow.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(kPaddingM),
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                placeholder: (context, url) => Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                errorWidget: (context, url, error) => Icon(
+                  Icons.fastfood_outlined,
+                  color: colorScheme.primary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: kPaddingS),
+          Text(
+            name,
+            style:
+                theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecommendedSection extends StatelessWidget {
+  final List<Product> products;
+
+  const _RecommendedSection({required this.products});
+
+  @override
+  Widget build(BuildContext context) {
+    if (products.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        Padding(
+          padding: const EdgeInsets.all(kPaddingM),
           child: Text(
-            "RECOMMENDED ITEMS",
-            style: TextStyle(color: kGold, fontWeight: FontWeight.w900, fontSize: 16),
+            kRecommendedItems,
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: products.length,
-          itemBuilder: (context, index) {
-            final product = products[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: kCream,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Center(child: Text(product.emoji, style: const TextStyle(fontSize: 40))),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            const Icon(Icons.check_box_outline_blank, color: Colors.green, size: 16),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text("₹ ${product.price}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildAddButton(cart, product),
-                ],
-              ),
-            );
-          },
+          padding: const EdgeInsets.symmetric(horizontal: kPaddingM),
+          itemCount: products.length > 5 ? 5 : products.length,
+          itemBuilder: (context, index) =>
+              ProductListItem(product: products[index]),
         ),
+        if (products.length > 5)
+          Center(
+            child: TextButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const CategoryMenuPage(initialCategory: 'All'),
+                  ),
+                );
+              },
+              icon: Text(
+                kViewAllSnacks,
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              label: Icon(
+                Icons.arrow_forward,
+                size: 16,
+                color: colorScheme.primary,
+              ),
+            ),
+          ),
       ],
     );
   }
+}
 
-  Widget _buildAddButton(CartController cart, Product product) {
-    final qty = cart.items[product.id] ?? 0;
-    
-    if (qty > 0) {
-      return Container(
-        decoration: BoxDecoration(
-          color: kGold.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: kGold.withValues(alpha: 0.2)),
-        ),
-        child: Row(
+class _ShimmerLoading extends StatelessWidget {
+  const _ShimmerLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
+
+    return SingleChildScrollView(
+      child: Shimmer.fromColors(
+        baseColor: baseColor,
+        highlightColor: highlightColor,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IconButton(
-              icon: const Icon(Icons.remove, size: 16, color: kGold),
-              onPressed: () => cart.removeItem(product.id),
+            Container(
+              height: 180,
+              margin: const EdgeInsets.all(kPaddingM),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(kRadiusL),
+              ),
             ),
-            Text("$qty", style: const TextStyle(fontWeight: FontWeight.bold, color: kGold)),
-            IconButton(
-              icon: const Icon(Icons.add, size: 16, color: kGold),
-              onPressed: () => cart.addItem(product.id),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: kPaddingM,
+                vertical: kPaddingS,
+              ),
+              child: Container(height: 20, width: 150, color: colorScheme.surface),
+            ),
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: kPaddingS),
+                itemCount: 5,
+                itemBuilder: (context, index) => Column(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      margin: const EdgeInsets.symmetric(horizontal: kPaddingS),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(kRadiusL),
+                      ),
+                    ),
+                    const SizedBox(height: kPaddingS),
+                    Container(height: 10, width: 50, color: colorScheme.surface),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(kPaddingM),
+              child: Container(height: 20, width: 180, color: colorScheme.surface),
+            ),
+            ...List.generate(
+              3,
+              (_) => Container(
+                height: 120,
+                margin: const EdgeInsets.symmetric(
+                  horizontal: kPaddingM,
+                  vertical: kPaddingS,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(kRadiusL),
+                ),
+              ),
             ),
           ],
         ),
-      );
-    }
-
-    return OutlinedButton(
-      onPressed: () => cart.addItem(product.id),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: kGold,
-        side: const BorderSide(color: kGold),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      child: const Text("Add +", style: TextStyle(fontWeight: FontWeight.bold)),
     );
   }
 }
@@ -288,8 +439,13 @@ class Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
-      color: kDark,
+      color: theme.brightness == Brightness.dark 
+          ? colorScheme.surfaceContainer 
+          : kDark, // Using kDark for brand identity in light mode too
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
@@ -301,53 +457,82 @@ class Footer extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("ANNAMALAIYAR",
-                        style: GoogleFonts.playfairDisplay(color: kGoldLight, fontWeight: FontWeight.bold, fontSize: 18)),
+                    Text(
+                      "ANNAMALAIYAR",
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: colorScheme.outline,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    const Text(
-                      "Preserving the rich culinary heritage of Chettinad through authentic flavours and traditional recipes.",
-                      style: TextStyle(color: Colors.white38, fontSize: 12, height: 1.6),
+                    Text(
+                      kFooterDesc,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: kWhite.withValues(alpha: 0.38),
+                        fontSize: 12,
+                        height: 1.6,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 24),
-              const Expanded(
-                child: FooterCol(
-                  title: "CONTACT",
-                  items: ["+91 98765 43210", "WhatsApp Us", "Email Us"],
-                ),
-              ),
-            ],
+          const Expanded(
+            child: FooterCol(
+              title: kContact,
+              items: ["+91 86810 20301", kWhatsAppUs, kEmailUs],
+            ),
           ),
-          const SizedBox(height: 40),
-          const Divider(color: Colors.white10),
-          const SizedBox(height: 20),
-          const Text("© 2025 Annamalaiyar Chettinadu Snacks. Karaikudi",
-              style: TextStyle(color: Colors.white24, fontSize: 12)),
         ],
       ),
-    );
-  }
+      const SizedBox(height: 40),
+      Divider(color: kWhite.withValues(alpha: 0.1)),
+      const SizedBox(height: 20),
+      Text(
+        kCopyright,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: kWhite.withValues(alpha: 0.24),
+          fontSize: 12,
+        ),
+      ),
+    ],
+  ),
+);
+}
 }
 
 class FooterCol extends StatelessWidget {
-  final String title;
-  final List<String> items;
-  const FooterCol({super.key, required this.title, required this.items});
+final String title;
+final List<String> items;
+const FooterCol({super.key, required this.title, required this.items});
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1)),
-        const SizedBox(height: 12),
-        ...items.map((i) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(i, style: const TextStyle(color: Colors.white38, fontSize: 12)),
-            )),
+@override
+Widget build(BuildContext context) {
+final theme = Theme.of(context);
+return Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Text(
+      title,
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: kWhite,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1,
+      ),
+    ),
+    const SizedBox(height: 12),
+    ...items.map(
+      (i) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(
+          i,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: kWhite.withValues(alpha: 0.38),
+            fontSize: 12,
+          ),
+        ),
+      ),
+    ),
       ],
     );
   }

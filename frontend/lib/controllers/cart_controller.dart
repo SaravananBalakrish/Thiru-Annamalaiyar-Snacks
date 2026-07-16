@@ -20,6 +20,7 @@ class CartController extends ChangeNotifier with ErrorHandlerMixin {
         final stored = await StorageService.getCart();
         _items = stored.map((key, value) => MapEntry(int.parse(key), value));
       }
+      notifyListeners();
     });
   }
 
@@ -55,7 +56,7 @@ class CartController extends ChangeNotifier with ErrorHandlerMixin {
     return total;
   }
 
-  void addItem(int productId) async {
+  Future<void> addItem(int productId) async {
     await runSafe(() async {
       _items[productId] = (_items[productId] ?? 0) + 1;
       notifyListeners();
@@ -69,7 +70,7 @@ class CartController extends ChangeNotifier with ErrorHandlerMixin {
     });
   }
 
-  void removeItem(int productId) async {
+  Future<void> removeItem(int productId) async {
     if (_items.containsKey(productId)) {
       await runSafe(() async {
         final token = await StorageService.getToken();
@@ -92,9 +93,9 @@ class CartController extends ChangeNotifier with ErrorHandlerMixin {
     }
   }
 
-  void clearCart() {
+  Future<void> clearCart() async {
     _items.clear();
-    _saveToStorage();
+    await _saveToStorage();
     notifyListeners();
   }
 }

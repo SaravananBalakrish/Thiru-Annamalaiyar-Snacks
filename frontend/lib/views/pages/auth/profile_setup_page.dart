@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
 import '../main_screen.dart';
-import '../../../constants.dart';
 
 class ProfileSetupPage extends StatelessWidget {
   const ProfileSetupPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: kCream,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: kCream,
+        backgroundColor: theme.appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: kText),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           "Setup Profile",
-          style: TextStyle(color: kText, fontSize: 18, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(fontSize: 18),
         ),
         centerTitle: true,
       ),
@@ -27,38 +29,38 @@ class ProfileSetupPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Personal Details",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kText),
+              style: theme.textTheme.displayLarge?.copyWith(fontSize: 22),
             ),
             const SizedBox(height: 8),
             Text(
               "Please fill in your details to complete your profile.",
-              style: TextStyle(color: kTextMuted, fontSize: 14),
+              style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 32),
-            _buildFieldLabel("First Name"),
-            _buildTextField("Enter your first name", Icons.person_outline),
+            _buildFieldLabel(context, "First Name"),
+            _buildTextField(context, "Enter your first name", Icons.person_outline),
             const SizedBox(height: 20),
-            _buildFieldLabel("Last Name", isOptional: true),
-            _buildTextField("Enter your last name", Icons.person_outline),
+            _buildFieldLabel(context, "Last Name", isOptional: true),
+            _buildTextField(context, "Enter your last name", Icons.person_outline),
             const SizedBox(height: 20),
-            _buildFieldLabel("Email Address"),
-            _buildTextField("e.g. name@example.com", Icons.email_outlined),
+            _buildFieldLabel(context, "Email Address"),
+            _buildTextField(context, "e.g. name@example.com", Icons.email_outlined),
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.info_outline, size: 14, color: kGold),
+                Icon(Icons.info_outline, size: 14, color: colorScheme.primary),
                 const SizedBox(width: 4),
                 Text(
                   "Required for sending order invoices and updates.",
-                  style: TextStyle(color: kTextMuted, fontSize: 11),
+                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            _buildFieldLabel("Date of Birth", isOptional: true),
-            _buildDropdownField("Select Date", Icons.calendar_today_outlined),
+            _buildFieldLabel(context, "Date of Birth", isOptional: true),
+            _buildDropdownField(context, "Select Date", Icons.calendar_today_outlined),
             const SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
@@ -71,14 +73,7 @@ class ProfileSetupPage extends StatelessWidget {
                     (route) => false,
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kGold,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text(
-                  "Save Profile",
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                child: const Text("Save Profile"),
               ),
             ),
           ],
@@ -87,26 +82,29 @@ class ProfileSetupPage extends StatelessWidget {
     );
   }
 
-  Widget _buildFieldLabel(String label, {bool isOptional = false}) {
+  Widget _buildFieldLabel(BuildContext context, String label, {bool isOptional = false}) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
           Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: kText),
+            style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           if (isOptional) ...[
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: kGold.withValues(alpha: 0.1),
+                color: colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text(
+              child: Text(
                 "Optional",
-                style: TextStyle(color: kGold, fontSize: 10),
+                style: TextStyle(color: colorScheme.primary, fontSize: 10),
               ),
             ),
           ],
@@ -115,48 +113,41 @@ class ProfileSetupPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(String hint, IconData icon) {
+  Widget _buildTextField(BuildContext context, String hint, IconData icon) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return TextField(
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: kTextMuted.withValues(alpha: 0.5), fontSize: 14),
-        prefixIcon: Icon(icon, color: kGold.withValues(alpha: 0.5), size: 20),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: kGold.withValues(alpha: 0.2)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: kGold.withValues(alpha: 0.2)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: kGold),
-        ),
+        prefixIcon: Icon(icon, color: colorScheme.primary.withValues(alpha: 0.5), size: 20),
       ),
     );
   }
 
-  Widget _buildDropdownField(String hint, IconData icon) {
+  Widget _buildDropdownField(BuildContext context, String hint, IconData icon) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: kGold.withValues(alpha: 0.2)),
+        color: theme.inputDecorationTheme.fillColor,
+        border: Border.all(color: colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Icon(icon, color: kGold.withValues(alpha: 0.5), size: 20),
+          Icon(icon, color: colorScheme.primary.withValues(alpha: 0.5), size: 20),
           const SizedBox(width: 12),
-          Text(hint, style: TextStyle(color: kTextMuted.withValues(alpha: 0.5), fontSize: 14)),
+          Text(
+            hint,
+            style: theme.inputDecorationTheme.hintStyle?.copyWith(fontSize: 14),
+          ),
           const Spacer(),
-          const Icon(Icons.keyboard_arrow_down, color: kGold),
+          Icon(Icons.keyboard_arrow_down, color: colorScheme.primary),
         ],
       ),
     );
   }
 }
-

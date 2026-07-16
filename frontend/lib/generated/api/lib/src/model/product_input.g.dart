@@ -21,13 +21,13 @@ class _$ProductInput extends ProductInput {
   factory _$ProductInput([void Function(ProductInputBuilder)? updates]) =>
       (ProductInputBuilder()..update(updates))._build();
 
-  _$ProductInput._({
-    required this.name,
-    this.description,
-    required this.price,
-    this.imageUrl,
-    this.categoryId,
-  }) : super._();
+  _$ProductInput._(
+      {required this.name,
+      this.description,
+      required this.price,
+      this.imageUrl,
+      this.categoryId})
+      : super._();
   @override
   ProductInput rebuild(void Function(ProductInputBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -125,20 +125,13 @@ class ProductInputBuilder
   ProductInput build() => _build();
 
   _$ProductInput _build() {
-    final _$result =
-        _$v ??
+    final _$result = _$v ??
         _$ProductInput._(
           name: BuiltValueNullFieldError.checkNotNull(
-            name,
-            r'ProductInput',
-            'name',
-          ),
+              name, r'ProductInput', 'name'),
           description: description,
           price: BuiltValueNullFieldError.checkNotNull(
-            price,
-            r'ProductInput',
-            'price',
-          ),
+              price, r'ProductInput', 'price'),
           imageUrl: imageUrl,
           categoryId: categoryId,
         );

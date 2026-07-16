@@ -15,6 +15,7 @@ export 'package:e_shop_api/src/api/cart_api.dart';
 export 'package:e_shop_api/src/api/categories_api.dart';
 export 'package:e_shop_api/src/api/orders_api.dart';
 export 'package:e_shop_api/src/api/products_api.dart';
+export 'package:e_shop_api/src/api/reviews_api.dart';
 
 export 'package:e_shop_api/src/model/cart_add.dart';
 export 'package:e_shop_api/src/model/cart_item.dart';
@@ -27,6 +28,9 @@ export 'package:e_shop_api/src/model/order_item.dart';
 export 'package:e_shop_api/src/model/pay_order_input.dart';
 export 'package:e_shop_api/src/model/product.dart';
 export 'package:e_shop_api/src/model/product_input.dart';
+export 'package:e_shop_api/src/model/review.dart';
+export 'package:e_shop_api/src/model/review_input.dart';
+export 'package:e_shop_api/src/model/review_update.dart';
 export 'package:e_shop_api/src/model/v1_auth_request_otp_post_request.dart';
 export 'package:e_shop_api/src/model/v1_auth_verify_otp_post_request.dart';
 

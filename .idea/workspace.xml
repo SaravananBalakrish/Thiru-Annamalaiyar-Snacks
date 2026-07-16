@@ -4,7 +4,140 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="32192160-ccb6-40c7-ab7c-a1b7872c40cc" name="Changes" comment="" />
+    <list default="true" id="32192160-ccb6-40c7-ab7c-a1b7872c40cc" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/frontend/lib/controllers/address_controller.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/models/address.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/utils/result.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/utils/theme.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/views/pages/active_orders_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/views/pages/map_picker_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/views/pages/saved_addresses_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/views/pages/search_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/views/widgets/cart/cart_item_tile.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/views/widgets/cart/fulfillment_selector.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/views/widgets/cart/order_summary_card.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/views/widgets/compact_cart_strip.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/lib/views/widgets/product_list_item.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/test/controllers/cart_controller_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/app.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/app.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/db/schema.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/db/schema.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/openapi.ts" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/openapi.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/android/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/ios/Runner/Info.plist" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/ios/Runner/Info.plist" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/constants.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/constants.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/controllers/cart_controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/controllers/cart_controller.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/controllers/order_controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/controllers/order_controller.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/controllers/product_controller.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/controllers/product_controller.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/.openapi-generator-ignore" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/.openapi-generator-ignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/.openapi-generator/FILES" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/.openapi-generator/FILES" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/.openapi-generator/VERSION" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/.openapi-generator/VERSION" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/analysis_options.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/analysis_options.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/AuthApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/AuthApi.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CartAdd.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CartAdd.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CartApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CartApi.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CartItem.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CartItem.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CartPatch.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CartPatch.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CategoriesApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CategoriesApi.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/Category.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/Category.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CategoryInput.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/CategoryInput.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/Order.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/Order.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/OrderInput.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/OrderInput.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/OrderItem.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/OrderItem.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/OrdersApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/OrdersApi.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/PayOrderInput.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/PayOrderInput.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/Product.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/Product.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/ProductInput.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/ProductInput.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/ProductsApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/ProductsApi.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/V1AuthRequestOtpPostRequest.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/V1AuthRequestOtpPostRequest.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/doc/V1AuthVerifyOtpPostRequest.md" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/doc/V1AuthVerifyOtpPostRequest.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/e_shop_api.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/e_shop_api.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api/auth_api.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api/auth_api.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api/cart_api.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api/cart_api.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api/categories_api.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api/categories_api.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api/orders_api.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api/orders_api.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api/products_api.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api/products_api.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api_util.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/api_util.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/auth/api_key_auth.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/auth/api_key_auth.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/auth/auth.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/auth/auth.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/auth/basic_auth.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/auth/basic_auth.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/auth/bearer_auth.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/auth/bearer_auth.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/auth/oauth.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/auth/oauth.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/date_serializer.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/date_serializer.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_add.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_add.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_add.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_add.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_item.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_item.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_item.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_item.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_patch.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_patch.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_patch.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/cart_patch.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/category.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/category.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/category.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/category.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/category_input.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/category_input.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/category_input.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/category_input.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/date.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/date.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order_input.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order_input.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order_input.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order_input.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order_item.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order_item.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order_item.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/order_item.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/pay_order_input.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/pay_order_input.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/pay_order_input.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/pay_order_input.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/product.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/product.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/product.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/product.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/product_input.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/product_input.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/product_input.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/product_input.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/v1_auth_request_otp_post_request.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/v1_auth_request_otp_post_request.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/v1_auth_request_otp_post_request.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/v1_auth_request_otp_post_request.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/v1_auth_verify_otp_post_request.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/v1_auth_verify_otp_post_request.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/v1_auth_verify_otp_post_request.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/model/v1_auth_verify_otp_post_request.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/serializers.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/serializers.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/serializers.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/lib/src/serializers.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/auth_api_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/auth_api_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/cart_add_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/cart_add_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/cart_api_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/cart_api_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/cart_item_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/cart_item_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/cart_patch_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/cart_patch_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/categories_api_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/categories_api_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/category_input_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/category_input_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/category_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/category_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/order_input_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/order_input_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/order_item_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/order_item_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/order_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/order_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/orders_api_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/orders_api_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/pay_order_input_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/pay_order_input_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/product_input_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/product_input_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/product_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/product_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/products_api_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/products_api_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/v1_auth_request_otp_post_request_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/v1_auth_request_otp_post_request_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/generated/api/test/v1_auth_verify_otp_post_request_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/generated/api/test/v1_auth_verify_otp_post_request_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/models/product.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/models/product.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/services/api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/services/api_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/services/storage_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/services/storage_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/utils/error_handler_mixin.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/utils/error_handler_mixin.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/pages/auth/login_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/pages/auth/login_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/pages/auth/otp_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/pages/auth/otp_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/pages/auth/profile_setup_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/pages/auth/profile_setup_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/pages/cart_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/pages/cart_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/pages/category_menu_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/pages/category_menu_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/pages/home_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/pages/home_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/pages/main_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/pages/main_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/pages/order_details_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/pages/order_details_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/pages/orders_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/pages/orders_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/pages/settings_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/pages/settings_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/pages/splash_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/pages/splash_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/widgets/product_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/widgets/product_card.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/lib/views/widgets/product_detail_sheet.dart" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/lib/views/widgets/product_detail_sheet.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/pubspec.yaml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -21,43 +154,43 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "SaravananBalakrish"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;SaravananBalakrish&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/SaravananBalakrish/Thiru-Annamalaiyar-Snacks.git",
-    "accountId": "a87827ed-ed53-4262-88fb-9b944f3aebca"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/SaravananBalakrish/Thiru-Annamalaiyar-Snacks.git&quot;,
+    &quot;accountId&quot;: &quot;a87827ed-ed53-4262-88fb-9b944f3aebca&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 3
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
   <component name="ProjectId" id="3F2OhLvb0qbwdBEl53E05PNv55r" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/sarav/StudioProjects/Thiru-Annamalaiyar-Snacks",
-    "show.migrate.to.gradle.popup": "false"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/sarav/StudioProjects/Thiru-Annamalaiyar-Snacks&quot;,
+    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
-}]]></component>
+}</component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="32192160-ccb6-40c7-ab7c-a1b7872c40cc" name="Changes" comment="" />

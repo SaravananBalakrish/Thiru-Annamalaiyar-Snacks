@@ -7,13 +7,10 @@ import '../utils/exceptions.dart';
 import 'storage_service.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.167:3000';
-  static const int maxRetries = 3;
-
   static final Dio _dio = Dio(BaseOptions(
-    baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
+    baseUrl: kBaseUrl,
+    connectTimeout: kNetworkTimeout,
+    receiveTimeout: kNetworkTimeout,
   ))..interceptors.addAll([
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -24,29 +21,23 @@ class ApiService {
           return handler.next(options);
         },
         onError: (DioException e, handler) async {
-          // 1. Handle Unauthorised globally
           if (e.response?.statusCode == 401) {
             await StorageService.deleteToken();
             navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
             return handler.reject(e);
           }
 
-          // 2. Centralized Retry Logic
           int retryCount = e.requestOptions.extra['retryCount'] ?? 0;
-          if (_shouldRetry(e) && retryCount < maxRetries) {
+          if (_shouldRetry(e) && retryCount < kMaxRetries) {
             retryCount++;
             e.requestOptions.extra['retryCount'] = retryCount;
             await Future.delayed(Duration(seconds: retryCount));
             try {
-              final response = await _dio.fetch(e.requestOptions);
-              return handler.resolve(response);
+              return handler.resolve(await _dio.fetch(e.requestOptions));
             } catch (retryError) {
-              if (retryError is DioException && retryCount >= maxRetries) {
+              if (retryError is DioException && retryCount >= kMaxRetries) {
                 return _handleFinalError(retryError, handler);
               }
-              // If it's not the last retry, we might want to continue retrying
-              // but Dio Interceptors are a bit tricky with nested retries here.
-              // For simplicity, we just reject if the immediate retry fails.
               return handler.reject(retryError is DioException ? retryError : e);
             }
           }
@@ -59,8 +50,6 @@ class ApiService {
   static Future<void> _handleFinalError(DioException e, ErrorInterceptorHandler handler) async {
     final appEx = _mapException(e);
     _showErrorSnackBar(appEx.message);
-    
-    // Reject with the original exception but with our mapped AppException as the error
     return handler.reject(DioException(
       requestOptions: e.requestOptions,
       error: appEx,
@@ -82,42 +71,38 @@ class ApiService {
       return FetchDataException('Connection timed out. Please check your internet.');
     }
     
-    if (e.type == DioExceptionType.connectionError) {
-      return NoInternetException();
-    }
+    if (e.type == DioExceptionType.connectionError) return NoInternetException();
 
     if (e.response != null) {
-      final statusCode = e.response?.statusCode;
       final data = e.response?.data;
-      String message = 'Something went wrong';
-      
-      if (data is Map && data.containsKey('message')) {
-        message = data['message'];
-      } else if (data is String && data.isNotEmpty) {
-        message = data;
-      }
+      final message = (data is Map && data.containsKey('message'))
+          ? data['message']
+          : (data is String && data.isNotEmpty ? data : 'Something went wrong');
 
-      switch (statusCode) {
-        case 400: return BadRequestException(message, statusCode);
-        case 401: return UnauthorisedException(message);
-        case 404: return NotFoundException(message);
-        case 500: return InternalServerErrorException(message);
-        default: return AppException(message, 'Error ($statusCode): ', statusCode);
-      }
+      return switch (e.response?.statusCode) {
+        400 => BadRequestException(message, 400),
+        401 => UnauthorisedException(message),
+        404 => NotFoundException(message),
+        500 => InternalServerErrorException(message),
+        final code => AppException(message, 'Error ($code): ', code),
+      };
     }
     return AppException('An unexpected error occurred');
   }
 
   static void _showErrorSnackBar(String message) {
+    final context = navigatorKey.currentContext;
+    final colorScheme = context != null ? Theme.of(context).colorScheme : null;
+    
     scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
     scaffoldMessengerKey.currentState?.showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: kRed,
+        backgroundColor: colorScheme?.error ?? kRed,
         behavior: SnackBarBehavior.floating,
         action: SnackBarAction(
           label: 'OK',
-          textColor: Colors.white,
+          textColor: colorScheme?.onError ?? kWhite,
           onPressed: () => scaffoldMessengerKey.currentState?.hideCurrentSnackBar(),
         ),
       ),

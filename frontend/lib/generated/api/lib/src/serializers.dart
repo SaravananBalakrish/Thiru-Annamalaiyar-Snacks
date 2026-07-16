@@ -25,6 +25,9 @@ import 'package:e_shop_api/src/model/order_item.dart';
 import 'package:e_shop_api/src/model/pay_order_input.dart';
 import 'package:e_shop_api/src/model/product.dart';
 import 'package:e_shop_api/src/model/product_input.dart';
+import 'package:e_shop_api/src/model/review.dart';
+import 'package:e_shop_api/src/model/review_input.dart';
+import 'package:e_shop_api/src/model/review_update.dart';
 import 'package:e_shop_api/src/model/v1_auth_request_otp_post_request.dart';
 import 'package:e_shop_api/src/model/v1_auth_verify_otp_post_request.dart';
 
@@ -42,10 +45,17 @@ part 'serializers.g.dart';
   PayOrderInput,
   Product,
   ProductInput,
+  Review,
+  ReviewInput,
+  ReviewUpdate,
   V1AuthRequestOtpPostRequest,
   V1AuthVerifyOtpPostRequest,
 ])
 Serializers serializers = (_$serializers.toBuilder()
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(Review)]),
+        () => ListBuilder<Review>(),
+      )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(CartItem)]),
         () => ListBuilder<CartItem>(),

@@ -21,13 +21,9 @@ class _$OrderItem extends OrderItem {
   factory _$OrderItem([void Function(OrderItemBuilder)? updates]) =>
       (OrderItemBuilder()..update(updates))._build();
 
-  _$OrderItem._({
-    this.id,
-    this.orderId,
-    this.productId,
-    this.quantity,
-    this.price,
-  }) : super._();
+  _$OrderItem._(
+      {this.id, this.orderId, this.productId, this.quantity, this.price})
+      : super._();
   @override
   OrderItem rebuild(void Function(OrderItemBuilder) updates) =>
       (toBuilder()..update(updates)).build();
@@ -124,8 +120,7 @@ class OrderItemBuilder implements Builder<OrderItem, OrderItemBuilder> {
   OrderItem build() => _build();
 
   _$OrderItem _build() {
-    final _$result =
-        _$v ??
+    final _$result = _$v ??
         _$OrderItem._(
           id: id,
           orderId: orderId,

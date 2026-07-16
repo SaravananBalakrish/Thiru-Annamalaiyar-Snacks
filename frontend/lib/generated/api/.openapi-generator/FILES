@@ -18,6 +18,10 @@ doc/PayOrderInput.md
 doc/Product.md
 doc/ProductInput.md
 doc/ProductsApi.md
+doc/Review.md
+doc/ReviewInput.md
+doc/ReviewUpdate.md
+doc/ReviewsApi.md
 doc/V1AuthRequestOtpPostRequest.md
 doc/V1AuthVerifyOtpPostRequest.md
 lib/e_shop_api.dart
@@ -27,6 +31,7 @@ lib/src/api/cart_api.dart
 lib/src/api/categories_api.dart
 lib/src/api/orders_api.dart
 lib/src/api/products_api.dart
+lib/src/api/reviews_api.dart
 lib/src/api_util.dart
 lib/src/auth/api_key_auth.dart
 lib/src/auth/auth.dart
@@ -46,6 +51,9 @@ lib/src/model/order_item.dart
 lib/src/model/pay_order_input.dart
 lib/src/model/product.dart
 lib/src/model/product_input.dart
+lib/src/model/review.dart
+lib/src/model/review_input.dart
+lib/src/model/review_update.dart
 lib/src/model/v1_auth_request_otp_post_request.dart
 lib/src/model/v1_auth_verify_otp_post_request.dart
 lib/src/serializers.dart
@@ -66,5 +74,9 @@ test/pay_order_input_test.dart
 test/product_input_test.dart
 test/product_test.dart
 test/products_api_test.dart
+test/review_input_test.dart
+test/review_test.dart
+test/review_update_test.dart
+test/reviews_api_test.dart
 test/v1_auth_request_otp_post_request_test.dart
 test/v1_auth_verify_otp_post_request_test.dart

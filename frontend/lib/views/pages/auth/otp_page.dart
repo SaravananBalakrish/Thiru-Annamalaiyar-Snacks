@@ -23,17 +23,18 @@ class _OTPPageState extends State<OTPPage> {
   void initState() {
     super.initState();
     _startTimer();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("OTP sent successfully!"),
-          backgroundColor: kGold,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          margin: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
-        ),
-      );
-    });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final colorScheme = Theme.of(context).colorScheme;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("OTP sent successfully!"),
+            backgroundColor: colorScheme.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            margin: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
+          ),
+        );
+      });
   }
 
   void _startTimer() {
@@ -90,32 +91,37 @@ class _OTPPageState extends State<OTPPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: kCream,
       appBar: AppBar(
-        backgroundColor: kCream,
-        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: kText),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: kPaddingL),
         child: Column(
           children: [
-            const SizedBox(height: 20),
-            const Text(
+            const SizedBox(height: kPaddingM),
+            Text(
               "Verification code",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: kText),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: kPaddingS),
             Text(
               "Enter the 6-digit that we have sent via the\nphone number ${widget.phoneNumber}",
               textAlign: TextAlign.center,
-              style: TextStyle(color: kTextMuted, fontSize: 14, height: 1.5),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: kPaddingXL),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(
@@ -124,9 +130,9 @@ class _OTPPageState extends State<OTPPage> {
                   width: 45,
                   height: 45,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: colorScheme.surface,
                     shape: BoxShape.circle,
-                    border: Border.all(color: kGold.withValues(alpha: 0.2)),
+                    border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
                   ),
                   child: TextField(
                     controller: _controllers[index],
@@ -141,23 +147,27 @@ class _OTPPageState extends State<OTPPage> {
                     decoration: const InputDecoration(
                       counterText: "",
                       border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      filled: false,
+                      contentPadding: EdgeInsets.zero,
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: kPaddingXL),
             GestureDetector(
               onTap: _counter == 0 ? () {} : null,
               child: RichText(
                 text: TextSpan(
-                  style: TextStyle(color: kTextMuted, fontSize: 14),
+                  style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
                   children: [
                     const TextSpan(text: "Didn't receive your code? "),
                     TextSpan(
                       text: _counter > 0 ? _counter.toString() : "Resend",
-                      style: const TextStyle(
-                        color: kGold,
+                      style: TextStyle(
+                        color: colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -171,16 +181,16 @@ class _OTPPageState extends State<OTPPage> {
               height: 54,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _handleVerify,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kGold,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
                 child: _isLoading
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text(
-                    "Verify & Continue",
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  ? SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: colorScheme.onPrimary,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text("Verify & Continue"),
               ),
             ),
             const SizedBox(height: 40),

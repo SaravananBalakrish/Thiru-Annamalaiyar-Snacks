@@ -37,9 +37,8 @@ class _$CategoryInput extends CategoryInput {
 
   @override
   String toString() {
-    return (newBuiltValueToStringHelper(
-      r'CategoryInput',
-    )..add('name', name)).toString();
+    return (newBuiltValueToStringHelper(r'CategoryInput')..add('name', name))
+        .toString();
   }
 }
 
@@ -78,14 +77,10 @@ class CategoryInputBuilder
   CategoryInput build() => _build();
 
   _$CategoryInput _build() {
-    final _$result =
-        _$v ??
+    final _$result = _$v ??
         _$CategoryInput._(
           name: BuiltValueNullFieldError.checkNotNull(
-            name,
-            r'CategoryInput',
-            'name',
-          ),
+              name, r'CategoryInput', 'name'),
         );
     replace(_$result);
     return _$result;
