@@ -62,6 +62,32 @@ export const openapiSpec: OpenAPIObject = {
         },
       },
     },
+    '/v1/auth/validate': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Validate JWT token',
+        description: 'Check if the current JWT token is valid and not blacklisted',
+        security: [{ Bearer: [] }],
+        responses: {
+          '200': {
+            description: 'Token is valid',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', description: 'Validation result' },
+                    message: { type: 'string', description: 'Status message' },
+                    userId: { type: 'integer', description: 'The authenticated user ID' },
+                  },
+                },
+              },
+            },
+          },
+          '401': { description: 'Invalid or expired token' },
+        },
+      },
+    },
 
     // ─── Products ────────────────────────────────────────────────────────────
     '/v1/products': {
@@ -348,6 +374,14 @@ export const openapiSpec: OpenAPIObject = {
   },
 
   components: {
+    securitySchemes: {
+      Bearer: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'JWT token for authentication',
+      },
+    },
     schemas: {
       // ── Domain models ────────────────────────────────────────────────────
       Product: {

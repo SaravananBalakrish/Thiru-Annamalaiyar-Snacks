@@ -1,4 +1,5 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
+import { Context } from 'hono';
 import { z } from 'zod';
 import { generateAndSendOtp, verifyOtp } from '../auth/otp.service.js';
 import { signToken, blacklistToken } from '../auth/jwt.js';
@@ -19,7 +20,7 @@ const verifyOtpSchema = z.object({
     code: z.string().length(6),
 });
 
-authRoutes.post('/request-otp', async (c) => {
+authRoutes.post('/request-otp', async (c: Context) => {
     const body = await c.req.json();
     console.log('📥 Request:', JSON.stringify(body));
     
@@ -41,7 +42,7 @@ authRoutes.post('/request-otp', async (c) => {
     });
 });
 
-authRoutes.post('/verify-otp', async (c) => {
+authRoutes.post('/verify-otp', async (c: Context) => {
     const body = await c.req.json();
     const data = verifyOtpSchema.parse(body);
     
@@ -61,8 +62,18 @@ authRoutes.post('/verify-otp', async (c) => {
     return c.json({ success: true, token, userPhone: phone });
 });
 
+// JWT validation endpoint - requires authentication
+authRoutes.post('/validate', authMiddleware, async (c: Context) => {
+    const userId = c.get('userId');
+    return c.json({ 
+        success: true, 
+        message: 'Token is valid',
+        userId 
+    });
+});
+
 // Logout endpoint - requires authentication
-authRoutes.post('/logout', authMiddleware, async (c) => {
+authRoutes.post('/logout', authMiddleware, async (c: Context) => {
     const auth = c.req.header('authorization') || '';
     const match = auth.match(/^Bearer\s+(.+)$/i);
     if (!match) {
@@ -76,7 +87,7 @@ authRoutes.post('/logout', authMiddleware, async (c) => {
 });
 
 // Test endpoint to verify Twilio configuration
-authRoutes.get('/test-sms', async (c) => {
+authRoutes.get('/test-sms', async (c: Context) => {
     try {
         const testPhone = process.env.TWILIO_PHONE_NUMBER || '+1234567890';
         const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -93,19 +104,19 @@ authRoutes.get('/test-sms', async (c) => {
         const client = twilio.default(accountSid, authToken);
         
         await client.messages.create({
-            body: '🧪 E-Shop Twilio Test: Your SMS configuration is working correctly!',
+            body: 'Test SMS: Your SMS configuration is working correctly!',
             from: testPhone,
             to: testPhone,
         });
         
-        console.log('✅ Test SMS sent successfully!');
+        console.log('Test SMS sent successfully!');
         return c.json({ 
             success: true, 
             message: 'Test SMS sent! Check your phone.',
             sentTo: testPhone 
         });
     } catch (error: any) {
-        console.error('❌ Twilio Test Failed:', error.message);
+        console.error('Twilio Test Failed:', error.message);
         return c.json({ 
             success: false, 
             error: error.message,
