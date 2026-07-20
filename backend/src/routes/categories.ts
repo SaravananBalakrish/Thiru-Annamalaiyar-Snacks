@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { categories } from '../db/schema.js';
 import { z } from 'zod';
+import { authMiddleware } from '../middleware/auth.middleware.js';
 
 const router = new Hono();
 
@@ -35,8 +36,8 @@ router.get('/:id', async (c: Context) => {
   }
 });
 
-// POST / - create category
-router.post('/', async (c: Context) => {
+// POST / - create category (admin only)
+router.post('/', authMiddleware, async (c: Context) => {
   try {
     const body = await c.req.json();
     const parsed = categorySchema.safeParse(body);
@@ -49,8 +50,8 @@ router.post('/', async (c: Context) => {
   }
 });
 
-// PUT /:id - update category
-router.put('/:id', async (c: Context) => {
+// PUT /:id - update category (admin only)
+router.put('/:id', authMiddleware, async (c: Context) => {
   try {
     const id = Number(c.req.param('id'));
     if (isNaN(id)) return c.json({ error: 'Invalid id' }, 400);
@@ -70,8 +71,8 @@ router.put('/:id', async (c: Context) => {
   }
 });
 
-// DELETE /:id - delete category
-router.delete('/:id', async (c: Context) => {
+// DELETE /:id - delete category (admin only)
+router.delete('/:id', authMiddleware, async (c: Context) => {
   try {
     const id = Number(c.req.param('id'));
     if (isNaN(id)) return c.json({ error: 'Invalid id' }, 400);

@@ -16,6 +16,9 @@ export const products = pgTable('products', {
 
 export const cartItems = pgTable('cart_items', {
   id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   productId: integer('product_id')
     .notNull()
     .references(() => products.id, { onDelete: 'cascade' }),
@@ -75,5 +78,11 @@ export const reviews = pgTable('reviews', {
     .references(() => users.id, { onDelete: 'cascade' }),
   rating: integer('rating').notNull(),
   comment: text('comment'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const blacklistedTokens = pgTable('blacklisted_tokens', {
+  id: serial('id').primaryKey(),
+  token: varchar('token', { length: 500 }).notNull().unique(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

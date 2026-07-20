@@ -1,13 +1,16 @@
 import { Hono, Context } from 'hono';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { cartItems, products, orders, orderItems } from '../db/schema.js';
 import { z } from 'zod';
+import { authMiddleware } from '../middleware/auth.middleware.js';
 
 const router = new Hono();
 
+// Apply auth middleware to all order routes
+router.use('*', authMiddleware);
+
 const orderInputSchema = z.object({
-  userId: z.number().int().positive(),
   paymentMethod: z.string().optional().default('upi'),
 });
 
@@ -18,15 +21,16 @@ const payOrderSchema = z.object({
 // POST / - Place an order (checkout cart with UPI details generated)
 router.post('/', async (c: Context) => {
   try {
+    const userId = c.get('userId');
     const body = await c.req.json();
     const parsed = orderInputSchema.safeParse(body);
     if (!parsed.success) {
       return c.json({ error: parsed.error.format() }, 400);
     }
 
-    const { userId, paymentMethod } = parsed.data;
+    const { paymentMethod } = parsed.data;
 
-    // Get current cart items
+    // Get current cart items for this user
     const cartList = await db
       .select({
         cartItemId: cartItems.id,
@@ -35,7 +39,8 @@ router.post('/', async (c: Context) => {
         productPrice: products.price,
       })
       .from(cartItems)
-      .innerJoin(products, eq(cartItems.productId, products.id));
+      .innerJoin(products, eq(cartItems.productId, products.id))
+      .where(eq(cartItems.userId, userId));
 
     if (cartList.length === 0) {
       return c.json({ error: 'Cart is empty' }, 400);
@@ -71,8 +76,8 @@ router.post('/', async (c: Context) => {
 
       const createdItems = await tx.insert(orderItems).values(itemsData).returning();
 
-      // 3. Clear Cart
-      await tx.delete(cartItems);
+      // 3. Clear Cart for this user
+      await tx.delete(cartItems).where(eq(cartItems.userId, userId));
 
       return {
         ...newOrder,
@@ -99,6 +104,7 @@ router.post('/', async (c: Context) => {
 // POST /:id/pay - Confirm payment for an order
 router.post('/:id/pay', async (c: Context) => {
   try {
+    const userId = c.get('userId');
     const id = Number(c.req.param('id'));
     if (isNaN(id)) {
       return c.json({ error: 'Invalid id parameter' }, 400);
@@ -112,8 +118,8 @@ router.post('/:id/pay', async (c: Context) => {
 
     const { transactionRef } = parsed.data;
 
-    // Check if order exists
-    const orderRecord = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
+    // Check if order exists and belongs to user
+    const orderRecord = await db.select().from(orders).where(and(eq(orders.id, id), eq(orders.userId, userId))).limit(1);
     if (orderRecord.length === 0) {
       return c.notFound();
     }
@@ -141,22 +147,11 @@ router.post('/:id/pay', async (c: Context) => {
   }
 });
 
-// GET / - List orders (optionally filtered by userId)
+// GET / - List orders for authenticated user
 router.get('/', async (c: Context) => {
   try {
-    const userIdQuery = c.req.query('userId');
-    let orderList;
-
-    if (userIdQuery) {
-      const userId = Number(userIdQuery);
-      if (isNaN(userId)) {
-        return c.json({ error: 'Invalid userId query parameter' }, 400);
-      }
-      orderList = await db.select().from(orders).where(eq(orders.userId, userId));
-    } else {
-      orderList = await db.select().from(orders);
-    }
-
+    const userId = c.get('userId');
+    const orderList = await db.select().from(orders).where(eq(orders.userId, userId));
     return c.json(orderList);
   } catch (err) {
     console.error('[orders] GET /', err);
@@ -164,15 +159,16 @@ router.get('/', async (c: Context) => {
   }
 });
 
-// GET /:id - Get order by ID with its items
+// GET /:id - Get order by ID with its items (for authenticated user)
 router.get('/:id', async (c: Context) => {
   try {
+    const userId = c.get('userId');
     const id = Number(c.req.param('id'));
     if (isNaN(id)) {
       return c.json({ error: 'Invalid id parameter' }, 400);
     }
 
-    const orderRecord = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
+    const orderRecord = await db.select().from(orders).where(and(eq(orders.id, id), eq(orders.userId, userId))).limit(1);
     if (orderRecord.length === 0) {
       return c.notFound();
     }

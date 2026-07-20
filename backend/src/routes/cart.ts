@@ -1,19 +1,24 @@
 import { Hono, Context } from 'hono';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { cartItems, products } from '../db/schema.js';
 import { z } from 'zod';
+import { authMiddleware } from '../middleware/auth.middleware.js';
 
 const router = new Hono();
+
+// Apply auth middleware to all cart routes
+router.use('*', authMiddleware);
 
 const addItemSchema = z.object({
   productId: z.number().int().positive(),
   quantity: z.number().int().min(1).optional().default(1),
 });
 
-// GET / - list cart items with product details
+// GET / - list cart items with product details for authenticated user
 router.get('/', async (c: Context) => {
   try {
+    const userId = c.get('userId');
     const items = await db
       .select({
         id: cartItems.id,
@@ -26,7 +31,8 @@ router.get('/', async (c: Context) => {
         },
       })
       .from(cartItems)
-      .leftJoin(products, eq(cartItems.productId, products.id));
+      .leftJoin(products, eq(cartItems.productId, products.id))
+      .where(eq(cartItems.userId, userId));
     return c.json(items);
   } catch (err) {
     console.error('[cart] GET /', err);
@@ -34,9 +40,10 @@ router.get('/', async (c: Context) => {
   }
 });
 
-// POST / - add item to cart (upserts if product already in cart)
+// POST / - add item to cart (upserts if product already in cart for this user)
 router.post('/', async (c: Context) => {
   try {
+    const userId = c.get('userId');
     const body = await c.req.json();
     const parsed = addItemSchema.safeParse(body);
     if (!parsed.success) return c.json({ error: parsed.error.format() }, 400);
@@ -47,11 +54,11 @@ router.post('/', async (c: Context) => {
     const product = await db.select().from(products).where(eq(products.id, productId)).limit(1);
     if (product.length === 0) return c.json({ error: 'Product not found' }, 404);
 
-    // Upsert: if item exists, increase quantity
+    // Upsert: if item exists for this user, increase quantity
     const existing = await db
       .select()
       .from(cartItems)
-      .where(eq(cartItems.productId, productId))
+      .where(and(eq(cartItems.productId, productId), eq(cartItems.userId, userId)))
       .limit(1);
 
     if (existing.length > 0) {
@@ -63,7 +70,7 @@ router.post('/', async (c: Context) => {
       return c.json(updated[0]);
     }
 
-    const [created] = await db.insert(cartItems).values({ productId, quantity }).returning();
+    const [created] = await db.insert(cartItems).values({ userId, productId, quantity }).returning();
     return c.json(created, 201);
   } catch (err) {
     console.error('[cart] POST /', err);
@@ -74,6 +81,7 @@ router.post('/', async (c: Context) => {
 // PATCH /:id - update cart item quantity
 router.patch('/:id', async (c: Context) => {
   try {
+    const userId = c.get('userId');
     const id = Number(c.req.param('id'));
     if (isNaN(id)) return c.json({ error: 'Invalid id' }, 400);
     const body = await c.req.json();
@@ -82,7 +90,7 @@ router.patch('/:id', async (c: Context) => {
     const updated = await db
       .update(cartItems)
       .set({ quantity: parsed.data.quantity })
-      .where(eq(cartItems.id, id))
+      .where(and(eq(cartItems.id, id), eq(cartItems.userId, userId)))
       .returning();
     if (updated.length === 0) return c.notFound();
     return c.json(updated[0]);
@@ -95,9 +103,10 @@ router.patch('/:id', async (c: Context) => {
 // DELETE /:id - remove cart item
 router.delete('/:id', async (c: Context) => {
   try {
+    const userId = c.get('userId');
     const id = Number(c.req.param('id'));
     if (isNaN(id)) return c.json({ error: 'Invalid id' }, 400);
-    const del = await db.delete(cartItems).where(eq(cartItems.id, id)).returning();
+    const del = await db.delete(cartItems).where(and(eq(cartItems.id, id), eq(cartItems.userId, userId))).returning();
     if (del.length === 0) return c.notFound();
     return c.json({ message: 'Cart item removed successfully' });
   } catch (err) {

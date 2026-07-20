@@ -1,10 +1,11 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { generateAndSendOtp, verifyOtp } from '../auth/otp.service.js';
-import { signToken } from '../auth/jwt.js';
+import { signToken, blacklistToken } from '../auth/jwt.js';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
+import { authMiddleware } from '../middleware/auth.middleware.js';
 
 const authRoutes = new OpenAPIHono();
 
@@ -58,6 +59,20 @@ authRoutes.post('/verify-otp', async (c) => {
     const token = signToken(user[0].id);
 
     return c.json({ success: true, token, userPhone: phone });
+});
+
+// Logout endpoint - requires authentication
+authRoutes.post('/logout', authMiddleware, async (c) => {
+    const auth = c.req.header('authorization') || '';
+    const match = auth.match(/^Bearer\s+(.+)$/i);
+    if (!match) {
+        return c.json({ success: false, message: 'No token provided' }, 400);
+    }
+    
+    const token = match[1];
+    await blacklistToken(token);
+    
+    return c.json({ success: true, message: 'Logged out successfully' });
 });
 
 // Test endpoint to verify Twilio configuration

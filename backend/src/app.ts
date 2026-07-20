@@ -13,15 +13,21 @@ import { openapiSpec } from './openapi.js';
 
 const app = new OpenAPIHono();
 
-// Global CORS – adjust origins as needed
-app.use('*', cors());
+// Configure CORS with client URL from environment
+const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+app.use('*', cors({
+  origin: clientUrl,
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
 
 // Register versioned API routes
+app.route('/v1/auth', authRoutes);
 app.route('/v1/products', productRoutes);
 app.route('/v1/categories', categoryRoutes);
 app.route('/v1/cart', cartRoutes);
 app.route('/v1/orders', orderRoutes);
-app.route('/v1/auth', authRoutes);
 app.route('/v1/addresses', addressRoutes);
 app.route('/v1/reviews', reviewRoutes);
 

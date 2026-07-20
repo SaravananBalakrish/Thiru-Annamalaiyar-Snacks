@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import { verifyToken } from '../auth/jwt.js';
+import { verifyToken, isTokenBlacklisted } from '../auth/jwt.js';
 
 export const authMiddleware = async (c: Context, next: () => Promise<void>) => {
     const auth = c.req.header('authorization') || '';
@@ -9,6 +9,13 @@ export const authMiddleware = async (c: Context, next: () => Promise<void>) => {
     }
 
     const token = match[1];
+    
+    // Check if token is blacklisted
+    const isBlacklisted = await isTokenBlacklisted(token);
+    if (isBlacklisted) {
+        return c.json({ success: false, message: 'Token invalidated. Please login again.' }, 401);
+    }
+    
     const payload = verifyToken(token);
     if (!payload || !payload.sub) {
         return c.json({ success: false, message: 'Invalid token' }, 401);

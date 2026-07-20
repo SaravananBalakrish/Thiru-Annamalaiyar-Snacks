@@ -75,6 +75,28 @@ router.get('/:id', async (c: Context) => {
 const protectedRouter = new Hono();
 protectedRouter.use('*', authMiddleware);
 
+// GET / - list all reviews (authenticated users)
+protectedRouter.get('/', async (c: Context) => {
+  try {
+    const reviewList = await db
+      .select({
+        id: reviews.id,
+        productId: reviews.productId,
+        userId: reviews.userId,
+        rating: reviews.rating,
+        comment: reviews.comment,
+        createdAt: reviews.createdAt,
+      })
+      .from(reviews)
+      .orderBy(reviews.createdAt);
+    
+    return c.json(reviewList);
+  } catch (err) {
+    console.error('[reviews] GET /', err);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
 // POST / - create a review (authenticated users only)
 protectedRouter.post('/', async (c: Context) => {
   try {
@@ -159,28 +181,6 @@ protectedRouter.delete('/:id', async (c: Context) => {
     return c.json({ message: 'Review deleted successfully' });
   } catch (err) {
     console.error('[reviews] DELETE /:id', err);
-    return c.json({ error: 'Internal server error' }, 500);
-  }
-});
-
-// GET / - list all reviews (authenticated users, for admin dashboard)
-protectedRouter.get('/', async (c: Context) => {
-  try {
-    const reviewList = await db
-      .select({
-        id: reviews.id,
-        productId: reviews.productId,
-        userId: reviews.userId,
-        rating: reviews.rating,
-        comment: reviews.comment,
-        createdAt: reviews.createdAt,
-      })
-      .from(reviews)
-      .orderBy(reviews.createdAt);
-    
-    return c.json(reviewList);
-  } catch (err) {
-    console.error('[reviews] GET /', err);
     return c.json({ error: 'Internal server error' }, 500);
   }
 });
