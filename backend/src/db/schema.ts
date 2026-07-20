@@ -50,31 +50,6 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const rooms = pgTable('rooms', {
-  id: serial('id').primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(),
-});
-
-export const participants = pgTable('participants', {
-  id: serial('id').primaryKey(),
-  roomId: integer('room_id')
-    .notNull()
-    .references(() => rooms.id, { onDelete: 'cascade' }),
-  userId: integer('user_id').notNull(),
-});
-
-export const messages = pgTable('messages', {
-  id: serial('id').primaryKey(),
-  roomId: integer('room_id')
-    .notNull()
-    .references(() => rooms.id, { onDelete: 'cascade' }),
-  senderId: integer('sender_id').notNull(),
-  message: text('message').notNull(),
-  isRead: boolean('is_read').notNull().default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
-
 export const addresses = pgTable('addresses', {
   id: serial('id').primaryKey(),
   userId: integer('user_id')
