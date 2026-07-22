@@ -27,10 +27,11 @@ const addressSchema = z.object({
 
 const updateAddressSchema = addressSchema.partial();
 
-const formatCoord = (val: number | string | null | undefined): string | null | undefined => {
+const formatCoord = (val: number | string | null | undefined): number | null | undefined => {
   if (val === undefined) return undefined;
   if (val === null || val === '') return null;
-  return String(val);
+  const num = Number(val);
+  return isNaN(num) ? null : num;
 };
 
 // GET / - List all addresses for the authenticated user

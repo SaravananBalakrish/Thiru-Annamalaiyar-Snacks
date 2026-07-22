@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, integer, numeric, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, integer, numeric, text, timestamp, boolean, doublePrecision } from 'drizzle-orm/pg-core';
 
 export const categories = pgTable('categories', {
   id: serial('id').primaryKey(),
@@ -66,8 +66,8 @@ export const addresses = pgTable('addresses', {
   state: varchar('state', { length: 100 }).notNull(),
   zipCode: varchar('zip_code', { length: 20 }).notNull(),
   country: varchar('country', { length: 100 }).notNull().default('India'),
-  latitude: numeric('latitude', { precision: 10, scale: 7 }),
-  longitude: numeric('longitude', { precision: 10, scale: 7 }),
+  latitude: doublePrecision('latitude'),
+  longitude: doublePrecision('longitude'),
   addressType: varchar('address_type', { length: 50 }).default('home'),
   isDefault: boolean('is_default').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
