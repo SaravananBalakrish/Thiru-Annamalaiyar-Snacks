@@ -1,4 +1,4 @@
-﻿import { config } from "dotenv";
+import { config } from "dotenv";
 
 // Load correct env file before anything else
 config({
@@ -42,8 +42,7 @@ async function runMigrations(): Promise<void> {
   console.log(`   Migrations folder: ${migrationsFolder}`);
   console.log(`   Environment: ${process.env.NODE_ENV ?? "development"}`);
 
-  // For local dev (non-Neon), fall back to node-postgres
-  const isNeon = connectionString.includes("neon.tech");
+  const isNeon = (connectionString.includes("neon.tech") || connectionString.includes("neondatabase")) && !connectionString.includes("pooler");
 
   if (isNeon) {
     const sql = neon(connectionString as string);
@@ -52,22 +51,35 @@ async function runMigrations(): Promise<void> {
       await migrate(db, { migrationsFolder });
       console.log("✅ All migrations applied successfully.");
     } catch (error) {
-      console.error("❌ Migration failed:", (error as Error).message);
+      console.error("❌ Migration failed:", error);
       throw error;
     }
   } else {
-    // Local PostgreSQL — use node-postgres driver
+    // Node-postgres driver for Railway, Supabase, self-hosted, or pooled PostgreSQL
     const { Pool } = await import("pg");
     const { drizzle: pgDrizzle } = await import("drizzle-orm/node-postgres");
     const { migrate: pgMigrate } = await import("drizzle-orm/node-postgres/migrator");
 
-    const pool = new Pool({ connectionString: connectionString as string, max: 1 });
+    const isProduction = process.env.NODE_ENV === "production";
+    const requiresSsl =
+      isProduction ||
+      connectionString.includes("sslmode=require") ||
+      connectionString.includes("sslmode=verify-full") ||
+      connectionString.includes("sslmode=prefer") ||
+      connectionString.includes("ssl=true");
+
+    const pool = new Pool({
+      connectionString: connectionString as string,
+      max: 1,
+      ssl: requiresSsl ? { rejectUnauthorized: false } : undefined,
+    });
+
     const db = pgDrizzle(pool);
     try {
       await pgMigrate(db, { migrationsFolder });
       console.log("✅ All migrations applied successfully.");
     } catch (error) {
-      console.error("❌ Migration failed:", (error as Error).message);
+      console.error("❌ Migration failed:", error);
       throw error;
     } finally {
       await pool.end();
