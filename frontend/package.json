@@ -6,10 +6,10 @@
   "scripts": {
     "test": "echo 'Error: no test specified' && exit 1",
     "generate:web": "openapi-ts",
-    "generate:flutter": "openapi-generator-cli generate -i http://localhost:3000/v1/openapi.json -g dart-dio -o ./lib/generated/api --additional-properties=pubName=e_shop_api,useEnumExtension=true,nullableFields=true,legacyDiscriminatorBehavior=false,serializationLibrary=built_value -c flutter-openapi-config.yaml",
-    "postgenerate:flutter": "dart fix --apply && powershell -Command \"(Get-Content 'lib/generated/api/pubspec.yaml') -replace 'sdk: ''>=2.18.0 <4.0.0''', 'sdk: ''>=3.0.0 <4.0.0''' | Set-Content 'lib/generated/api/pubspec.yaml'\"",
-    "build:flutter": "cd lib/generated/api && dart pub get && dart run build_runner build --delete-conflicting-outputs",
-    "clean:flutter": "flutter clean && powershell -Command \"if (Test-Path lib/generated/api) { Remove-Item -Recurse -Force lib/generated/api }\"",
+    "generate:flutter": "npx dotenv-cli -e .env -- powershell -Command \"openapi-generator-cli generate -i $env:API_SPEC_URL -c flutter-openapi-config.yaml\"",
+    "postgenerate:flutter": "powershell -Command \"Get-ChildItem -Path lib/generated/api -Filter *.dart -Recurse | ForEach-Object { (Get-Content $_.FullName) -replace '//\\s*@dart\\s*=.*', '' | Set-Content -Encoding UTF8 $_.FullName }; $p = 'lib/generated/api/pubspec.yaml'; (Get-Content $p) -replace 'sdk:.*', 'sdk: ''>=3.10.8 <4.0.0''' | Set-Content -Encoding UTF8 $p\" && cd lib/generated/api && dart pub get",
+    "build:flutter": "cd lib/generated/api && dart run build_runner build --delete-conflicting-outputs && powershell -Command \"Get-ChildItem -Path . -Filter *.dart -Recurse | ForEach-Object { (Get-Content $_.FullName) -replace '//\\s*@dart\\s*=.*', '' | Set-Content -Encoding UTF8 $_.FullName }\"",
+    "clean:flutter": "flutter clean && powershell -Command \"if (Test-Path lib/generated/api) { cd lib/generated/api; if (Test-Path .dart_tool) { Remove-Item -Recurse -Force .dart_tool }; cd ../../..; Remove-Item -Recurse -Force lib/generated/api }\"",
     "flutter:all": "npm run clean:flutter && npm run generate:flutter && npm run postgenerate:flutter && npm run build:flutter",
     "flutter:update-api": "powershell -Command \"if (Test-Path lib/generated/api) { Remove-Item -Recurse -Force lib/generated/api }\" && npm run generate:flutter && npm run postgenerate:flutter && npm run build:flutter",
     "flutter:watch": "dart run build_runner watch --delete-conflicting-outputs"
@@ -18,11 +18,10 @@
   "license": "ISC",
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.28.3",
+    "dotenv-cli": "^7.4.2",
     "rimraf": "^6.0.1"
   },
   "engines": {
     "node": ">=18"
   }
 }
-
-

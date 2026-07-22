@@ -24,25 +24,44 @@ class SavedAddressesPage extends StatelessWidget {
       ),
       body: Consumer<AddressController>(
         builder: (context, controller, child) {
+          if (controller.isLoading && controller.addresses.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (controller.isLoading && controller.addresses.isEmpty) {
+            return _buildErrorState(theme, colorScheme, controller);
+          }
+
           if (controller.addresses.isEmpty) {
             return _buildEmptyState(theme, colorScheme, context);
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(kPaddingM),
-            itemCount: controller.addresses.length,
-            itemBuilder: (context, index) {
-              final address = controller.addresses[index];
-              return InkWell(
-                onTap: isSelectionMode ? () => Navigator.pop(context, address) : null,
-                child: _AddressCard(
-                  address: address,
-                  theme: theme,
-                  colorScheme: colorScheme,
-                  isSelectionMode: isSelectionMode,
+          return Stack(
+            children: [
+              ListView.builder(
+                padding: const EdgeInsets.all(kPaddingM),
+                itemCount: controller.addresses.length,
+                itemBuilder: (context, index) {
+                  final address = controller.addresses[index];
+                  return InkWell(
+                    onTap: isSelectionMode ? () => Navigator.pop(context, address) : null,
+                    child: _AddressCard(
+                      address: address,
+                      theme: theme,
+                      colorScheme: colorScheme,
+                      isSelectionMode: isSelectionMode,
+                    ),
+                  );
+                },
+              ),
+              if (controller.isLoading)
+                const Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: LinearProgressIndicator(),
                 ),
-              );
-            },
+            ],
           );
         },
       ),
@@ -82,6 +101,31 @@ class SavedAddressesPage extends StatelessWidget {
                 color: colorScheme.onSurfaceVariant,
                 height: 1.5,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(ThemeData theme, ColorScheme colorScheme, AddressController controller) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(kPaddingXL),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 60, color: colorScheme.error),
+            const SizedBox(height: kPaddingM),
+            Text(
+              controller.error ?? "Something went wrong",
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: kPaddingL),
+            ElevatedButton(
+              onPressed: () => controller.loadAddresses(),
+              child: const Text("Try Again"),
             ),
           ],
         ),
@@ -136,8 +180,13 @@ class SavedAddressesPage extends StatelessWidget {
 
   void _showAddAddressSheet(BuildContext context, {String? initialAddress}) {
     final labelController = TextEditingController();
-    final addressController = TextEditingController(text: initialAddress);
+    final fullNameController = TextEditingController();
+    final phoneController = TextEditingController();
+    final streetController = TextEditingController(text: initialAddress);
+    final landmarkController = TextEditingController();
     final cityController = TextEditingController();
+    final stateController = TextEditingController(text: "Tamil Nadu");
+    final zipController = TextEditingController();
 
     showModalBottomSheet(
       context: context,
@@ -149,45 +198,84 @@ class SavedAddressesPage extends StatelessWidget {
           right: kPaddingL,
           top: kPaddingL,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text("Add New Address", style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: kPaddingL),
-            TextField(
-              controller: labelController,
-              decoration: const InputDecoration(labelText: "Label (e.g. Home, Office)"),
-            ),
-            const SizedBox(height: kPaddingM),
-            TextField(
-              controller: addressController,
-              decoration: const InputDecoration(labelText: "Full Address"),
-              maxLines: 2,
-            ),
-            const SizedBox(height: kPaddingM),
-            TextField(
-              controller: cityController,
-              decoration: const InputDecoration(labelText: "City"),
-            ),
-            const SizedBox(height: kPaddingL),
-            ElevatedButton(
-              onPressed: () {
-                if (labelController.text.isNotEmpty &&
-                    addressController.text.isNotEmpty &&
-                    cityController.text.isNotEmpty) {
-                  context.read<AddressController>().addAddress(
-                    labelController.text,
-                    addressController.text,
-                    cityController.text,
-                  );
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text("Save Address"),
-            ),
-            const SizedBox(height: kPaddingL),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text("Add New Address", style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: kPaddingL),
+              TextField(
+                controller: labelController,
+                decoration: const InputDecoration(labelText: "Label (e.g. Home, Office)"),
+              ),
+              const SizedBox(height: kPaddingM),
+              TextField(
+                controller: fullNameController,
+                decoration: const InputDecoration(labelText: "Full Name"),
+              ),
+              const SizedBox(height: kPaddingM),
+              TextField(
+                controller: phoneController,
+                decoration: const InputDecoration(labelText: "Phone Number"),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: kPaddingM),
+              TextField(
+                controller: streetController,
+                decoration: const InputDecoration(labelText: "Street / Area"),
+                maxLines: 2,
+              ),
+              const SizedBox(height: kPaddingM),
+              TextField(
+                controller: landmarkController,
+                decoration: const InputDecoration(labelText: "Landmark (Optional)"),
+              ),
+              const SizedBox(height: kPaddingM),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: cityController,
+                      decoration: const InputDecoration(labelText: "City"),
+                    ),
+                  ),
+                  const SizedBox(width: kPaddingM),
+                  Expanded(
+                    child: TextField(
+                      controller: zipController,
+                      decoration: const InputDecoration(labelText: "Zip Code"),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: kPaddingL),
+              ElevatedButton(
+                onPressed: () {
+                  if (labelController.text.isNotEmpty &&
+                      streetController.text.isNotEmpty &&
+                      cityController.text.isNotEmpty &&
+                      fullNameController.text.isNotEmpty &&
+                      phoneController.text.isNotEmpty) {
+                    context.read<AddressController>().addAddress(
+                          labelController.text,
+                          streetController.text,
+                          cityController.text,
+                          fullName: fullNameController.text,
+                          phoneNumber: phoneController.text,
+                          landmark: landmarkController.text,
+                          state: stateController.text,
+                          zipCode: zipController.text,
+                        );
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text("Save Address"),
+              ),
+              const SizedBox(height: kPaddingL),
+            ],
+          ),
         ),
       ),
     );

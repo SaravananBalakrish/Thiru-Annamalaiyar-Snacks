@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -99,7 +100,7 @@ const String kNoResultsFor = 'No results found for';
 const String kTrySearchingElse = 'Try searching for something else';
 
 // --- API ---
-const String kBaseUrl = 'http://192.168.1.167:3000';
+final String kBaseUrl = dotenv.get('API_BASE_URL', fallback: 'https://thiru-annamalaiyar-snacks.up.railway.app');
 const int kMaxRetries = 3;
 const Duration kNetworkTimeout = Duration(seconds: 10);
 

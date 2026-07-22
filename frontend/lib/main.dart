@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:thiru_annamalaiyar_snacks/services/storage_service.dart';
 import 'controllers/cart_controller.dart';
 import 'controllers/order_controller.dart';
@@ -14,6 +15,8 @@ import 'utils/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+  debugPrint("Connected to: ${dotenv.env['API_BASE_URL']}");
   await StorageService.init();
   await _requestPermissions();
   runApp(
@@ -50,8 +53,8 @@ class AnnamalaiyarApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: scaffoldMessengerKey,
       navigatorKey: navigatorKey,
-      themeMode: ThemeMode.system,
-      theme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark,
+      theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       initialRoute: '/',
       routes: {

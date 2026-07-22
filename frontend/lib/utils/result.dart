@@ -25,6 +25,14 @@ sealed class Result<T> {
       Failure(exception: var e) => onFailure(e),
     };
   }
+
+  void ifSuccess(void Function(T value) action) {
+    if (this is Success<T>) action((this as Success<T>).value);
+  }
+
+  void ifFailure(void Function(AppException exception) action) {
+    if (this is Failure<T>) action((this as Failure<T>).exception);
+  }
 }
 
 final class Success<T> extends Result<T> {

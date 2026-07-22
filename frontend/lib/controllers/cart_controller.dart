@@ -3,6 +3,7 @@ import '../models/product.dart';
 import '../services/storage_service.dart';
 import '../services/api_service.dart';
 import '../utils/error_handler_mixin.dart';
+import '../utils/result.dart';
 
 class CartController extends ChangeNotifier with ErrorHandlerMixin {
   Map<int, int> _items = {}; // productId: quantity
@@ -12,20 +13,18 @@ class CartController extends ChangeNotifier with ErrorHandlerMixin {
   }
 
   Future<void> _loadInitialData() async {
-    await runSafe(() async {
-      final token = await StorageService.getToken();
-      if (token != null) {
-        _items = await ApiService.fetchCart();
-      } else {
-        final stored = await StorageService.getCart();
-        _items = stored.map((key, value) => MapEntry(int.parse(key), value));
-      }
+    final token = await StorageService.getToken();
+    if (token != null) {
+      syncWithServer();
+    } else {
+      final stored = await StorageService.getCart();
+      _items = stored.map((key, value) => MapEntry(int.parse(key), value));
       notifyListeners();
-    });
+    }
   }
 
-  Future<void> syncWithServer() async {
-    await runSafe(() async {
+  Future<Result<void>> syncWithServer() async {
+    return await runSafeResult(() async {
       _items = await ApiService.fetchCart();
     });
   }

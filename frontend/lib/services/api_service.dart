@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:e_shop_api/e_shop_api.dart' as api;
 import 'package:flutter/material.dart';
 import '../models/product.dart' as model;
+import '../models/address.dart';
 import '../constants.dart';
 import '../utils/exceptions.dart';
 import 'storage_service.dart';
@@ -23,6 +24,7 @@ class ApiService {
         onError: (DioException e, handler) async {
           if (e.response?.statusCode == 401) {
             await StorageService.deleteToken();
+            _showErrorSnackBar("Session expired. Please login again.");
             navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
             return handler.reject(e);
           }
@@ -50,6 +52,7 @@ class ApiService {
   static Future<void> _handleFinalError(DioException e, ErrorInterceptorHandler handler) async {
     final appEx = _mapException(e);
     _showErrorSnackBar(appEx.message);
+    debugPrint("Error: ${appEx.message}");
     return handler.reject(DioException(
       requestOptions: e.requestOptions,
       error: appEx,
@@ -133,6 +136,11 @@ class ApiService {
       }
     }
     return null;
+  }
+
+  static Future<bool> validateToken() async {
+    final response = await _api.getAuthApi().v1AuthValidatePost();
+    return response.statusCode == 200 && (response.data?.success ?? false);
   }
 
   static Future<List<model.Product>> fetchProducts() async {
@@ -231,6 +239,79 @@ class ApiService {
       return response.data!.toList();
     }
     return [];
+  }
+
+  // --- Address API ---
+  static Future<List<Address>> fetchAddresses() async {
+    final response = await _api.getAddressesApi().v1AddressesGet();
+    if (response.statusCode == 200 && response.data?.data != null) {
+      return response.data!.data!.map((a) => Address(
+        id: a.id.toString(),
+        label: a.addressType?.name ?? 'Other',
+        fullName: a.fullName ?? '',
+        phoneNumber: a.phoneNumber ?? '',
+        street: a.street ?? '',
+        landmark: a.landmark,
+        city: a.city ?? '',
+        state: a.state ?? '',
+        zipCode: a.zipCode ?? '',
+        isDefault: a.isDefault ?? false,
+        latitude: a.latitude != null ? double.tryParse(a.latitude!) : null,
+        longitude: a.longitude != null ? double.tryParse(a.longitude!) : null,
+      )).toList();
+    }
+    return [];
+  }
+
+  static Future<Address?> saveAddress(Address address) async {
+    final input = api.AddressInput((b) => b
+      ..fullName = address.fullName
+      ..phoneNumber = address.phoneNumber
+      ..street = address.street
+      ..landmark = address.landmark
+      ..city = address.city
+      ..state = address.state
+      ..zipCode = address.zipCode
+      ..country = 'India'
+      ..addressType = api.AddressInputAddressTypeEnum.valueOf(address.label.toLowerCase())
+      ..isDefault = address.isDefault
+      ..latitude = address.latitude
+      ..longitude = address.longitude
+    );
+
+    final response = await _api.getAddressesApi().v1AddressesPost(addressInput: input);
+    final data = response.data?.data;
+    if (data != null) {
+      return Address(
+        id: data.id.toString(),
+        label: data.addressType?.name ?? 'Other',
+        fullName: data.fullName ?? '',
+        phoneNumber: data.phoneNumber ?? '',
+        street: data.street ?? '',
+        landmark: data.landmark,
+        city: data.city ?? '',
+        state: data.state ?? '',
+        zipCode: data.zipCode ?? '',
+        isDefault: data.isDefault ?? false,
+        latitude: data.latitude != null ? double.tryParse(data.latitude!) : null,
+        longitude: data.longitude != null ? double.tryParse(data.longitude!) : null,
+      );
+    }
+    return null;
+  }
+
+  static Future<void> deleteAddress(String id) async {
+    final intId = int.tryParse(id);
+    if (intId != null) {
+      await _api.getAddressesApi().v1AddressesIdDelete(id: intId);
+    }
+  }
+
+  static Future<void> setDefaultAddress(String id) async {
+    final intId = int.tryParse(id);
+    if (intId != null) {
+      await _api.getAddressesApi().v1AddressesIdSetDefaultPost(id: intId);
+    }
   }
 
   static Future<api.Order?> placeOrder(String address, String city, String paymentMethod) async {

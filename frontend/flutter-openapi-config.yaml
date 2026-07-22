@@ -1,9 +1,10 @@
 generatorName: dart-dio
-inputSpec: http://localhost:3000/v1/openapi.json
 outputDir: ./lib/generated/api
 additionalProperties:
-  pubName: field_techy_api
+  pubName: e_shop_api
   pubVersion: 1.0.0
+  pubSdkConstraint: '>=3.10.8 <4.0.0'
+  nullSafe: true
   serializationLibrary: built_value
   useEnumExtension: true
   nullableFields: true
