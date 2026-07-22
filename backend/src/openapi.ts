@@ -371,6 +371,194 @@ export const openapiSpec: OpenAPIObject = {
         },
       },
     },
+
+    // ─── Addresses ───────────────────────────────────────────────────────────
+    '/v1/addresses': {
+      get: {
+        tags: ['Addresses'],
+        summary: 'List all addresses for the authenticated user',
+        security: [{ Bearer: [] }],
+        responses: {
+          '200': {
+            description: 'A list of user addresses',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: { type: 'array', items: { $ref: '#/components/schemas/Address' } },
+                  },
+                },
+              },
+            },
+          },
+          '401': { description: 'Unauthorized' },
+        },
+      },
+      post: {
+        tags: ['Addresses'],
+        summary: 'Create a new delivery address',
+        security: [{ Bearer: [] }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/AddressInput' } } },
+        },
+        responses: {
+          '201': {
+            description: 'Address created successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: { $ref: '#/components/schemas/Address' },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Validation failed' },
+          '401': { description: 'Unauthorized' },
+        },
+      },
+    },
+    '/v1/addresses/{id}': {
+      get: {
+        tags: ['Addresses'],
+        summary: 'Get address by ID',
+        security: [{ Bearer: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: {
+          '200': {
+            description: 'Address details',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: { $ref: '#/components/schemas/Address' },
+                  },
+                },
+              },
+            },
+          },
+          '401': { description: 'Unauthorized' },
+          '404': { description: 'Address not found' },
+        },
+      },
+      put: {
+        tags: ['Addresses'],
+        summary: 'Full update of an address',
+        security: [{ Bearer: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/AddressUpdate' } } },
+        },
+        responses: {
+          '200': {
+            description: 'Address updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: { $ref: '#/components/schemas/Address' },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Validation failed' },
+          '401': { description: 'Unauthorized' },
+          '404': { description: 'Address not found' },
+        },
+      },
+      patch: {
+        tags: ['Addresses'],
+        summary: 'Partial update of an address',
+        security: [{ Bearer: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/AddressUpdate' } } },
+        },
+        responses: {
+          '200': {
+            description: 'Address updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: { $ref: '#/components/schemas/Address' },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Validation failed' },
+          '401': { description: 'Unauthorized' },
+          '404': { description: 'Address not found' },
+        },
+      },
+      delete: {
+        tags: ['Addresses'],
+        summary: 'Delete an address',
+        security: [{ Bearer: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: {
+          '200': {
+            description: 'Address deleted successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          '401': { description: 'Unauthorized' },
+          '404': { description: 'Address not found' },
+        },
+      },
+    },
+    '/v1/addresses/{id}/set-default': {
+      post: {
+        tags: ['Addresses'],
+        summary: 'Set an address as default',
+        security: [{ Bearer: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: {
+          '200': {
+            description: 'Default address updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    message: { type: 'string' },
+                    data: { $ref: '#/components/schemas/Address' },
+                  },
+                },
+              },
+            },
+          },
+          '401': { description: 'Unauthorized' },
+          '404': { description: 'Address not found' },
+        },
+      },
+    },
   },
 
   components: {
@@ -384,6 +572,62 @@ export const openapiSpec: OpenAPIObject = {
     },
     schemas: {
       // ── Domain models ────────────────────────────────────────────────────
+      Address: {
+        type: 'object',
+        properties: {
+          id: { type: 'integer' },
+          userId: { type: 'integer' },
+          fullName: { type: 'string' },
+          phoneNumber: { type: 'string' },
+          street: { type: 'string' },
+          landmark: { type: ['string', 'null'] },
+          city: { type: 'string' },
+          state: { type: 'string' },
+          zipCode: { type: 'string' },
+          country: { type: 'string' },
+          latitude: { type: ['string', 'null'], description: 'Latitude coordinate (e.g. "13.0827000")' },
+          longitude: { type: ['string', 'null'], description: 'Longitude coordinate (e.g. "80.2707000")' },
+          addressType: { type: 'string', enum: ['home', 'work', 'billing', 'shipping', 'other'] },
+          isDefault: { type: 'boolean' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      AddressInput: {
+        type: 'object',
+        required: ['fullName', 'phoneNumber', 'street', 'city', 'state', 'zipCode'],
+        properties: {
+          fullName: { type: 'string', minLength: 1, maxLength: 100 },
+          phoneNumber: { type: 'string', minLength: 5, maxLength: 20 },
+          street: { type: 'string', minLength: 1, maxLength: 255 },
+          landmark: { type: 'string', maxLength: 255 },
+          city: { type: 'string', minLength: 1, maxLength: 100 },
+          state: { type: 'string', minLength: 1, maxLength: 100 },
+          zipCode: { type: 'string', minLength: 1, maxLength: 20 },
+          country: { type: 'string', maxLength: 100, default: 'India' },
+          latitude: { type: 'number', minimum: -90, maximum: 90, example: 13.0827 },
+          longitude: { type: 'number', minimum: -180, maximum: 180, example: 80.2707 },
+          addressType: { type: 'string', enum: ['home', 'work', 'billing', 'shipping', 'other'], default: 'home' },
+          isDefault: { type: 'boolean', default: false },
+        },
+      },
+      AddressUpdate: {
+        type: 'object',
+        properties: {
+          fullName: { type: 'string', minLength: 1, maxLength: 100 },
+          phoneNumber: { type: 'string', minLength: 5, maxLength: 20 },
+          street: { type: 'string', minLength: 1, maxLength: 255 },
+          landmark: { type: 'string', maxLength: 255 },
+          city: { type: 'string', minLength: 1, maxLength: 100 },
+          state: { type: 'string', minLength: 1, maxLength: 100 },
+          zipCode: { type: 'string', minLength: 1, maxLength: 20 },
+          country: { type: 'string', maxLength: 100 },
+          latitude: { type: 'number', minimum: -90, maximum: 90, example: 13.0827 },
+          longitude: { type: 'number', minimum: -180, maximum: 180, example: 80.2707 },
+          addressType: { type: 'string', enum: ['home', 'work', 'billing', 'shipping', 'other'] },
+          isDefault: { type: 'boolean' },
+        },
+      },
       Product: {
         type: 'object',
         properties: {

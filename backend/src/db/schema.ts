@@ -66,7 +66,9 @@ export const addresses = pgTable('addresses', {
   state: varchar('state', { length: 100 }).notNull(),
   zipCode: varchar('zip_code', { length: 20 }).notNull(),
   country: varchar('country', { length: 100 }).notNull().default('India'),
-  addressType: varchar('address_type', { length: 50 }).default('home'), // home, work, billing, shipping
+  latitude: numeric('latitude', { precision: 10, scale: 7 }),
+  longitude: numeric('longitude', { precision: 10, scale: 7 }),
+  addressType: varchar('address_type', { length: 50 }).default('home'),
   isDefault: boolean('is_default').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

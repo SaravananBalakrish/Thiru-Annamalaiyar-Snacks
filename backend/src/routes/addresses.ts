@@ -19,11 +19,19 @@ const addressSchema = z.object({
   state: z.string().trim().min(1, 'State is required').max(100),
   zipCode: z.string().trim().min(1, 'Zip code is required').max(20),
   country: z.string().trim().min(1).max(100).optional().default('India'),
+  latitude: z.union([z.number().min(-90).max(90), z.string()]).optional().nullable(),
+  longitude: z.union([z.number().min(-180).max(180), z.string()]).optional().nullable(),
   addressType: z.enum(['home', 'work', 'billing', 'shipping', 'other']).optional().default('home'),
   isDefault: z.boolean().optional().default(false),
 });
 
 const updateAddressSchema = addressSchema.partial();
+
+const formatCoord = (val: number | string | null | undefined): string | null | undefined => {
+  if (val === undefined) return undefined;
+  if (val === null || val === '') return null;
+  return String(val);
+};
 
 // GET / - List all addresses for the authenticated user
 router.get('/', async (c: Context) => {
@@ -95,13 +103,17 @@ router.post('/', async (c: Context) => {
           .where(and(eq(addresses.userId, userId), eq(addresses.isDefault, true)));
       }
 
+      const insertValues = {
+        ...parsed.data,
+        latitude: formatCoord(parsed.data.latitude),
+        longitude: formatCoord(parsed.data.longitude),
+        userId,
+        isDefault: willBeDefault,
+      };
+
       const [created] = await tx
         .insert(addresses)
-        .values({
-          ...parsed.data,
-          userId,
-          isDefault: willBeDefault,
-        })
+        .values(insertValues)
         .returning();
 
       return created;
@@ -140,7 +152,14 @@ const handleUpdate = async (c: Context) => {
         return null;
       }
 
-      const updateData = { ...parsed.data, updatedAt: new Date() };
+      const updateData: Record<string, any> = { ...parsed.data, updatedAt: new Date() };
+
+      if (parsed.data.latitude !== undefined) {
+        updateData.latitude = formatCoord(parsed.data.latitude);
+      }
+      if (parsed.data.longitude !== undefined) {
+        updateData.longitude = formatCoord(parsed.data.longitude);
+      }
 
       if (updateData.isDefault === true) {
         await tx
