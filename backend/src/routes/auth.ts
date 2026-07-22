@@ -48,7 +48,7 @@ authRoutes.post('/verify-otp', async (c: Context) => {
     
     const phone = data.phone;
 
-    const ok = verifyOtp(phone, data.code);
+    const ok = await verifyOtp(phone, data.code);
     if (!ok) return c.json({ success: false, message: 'Invalid or expired OTP' }, 400);
 
     let user = await db.select().from(users).where(eq(users.phoneNumber, phone)).limit(1);

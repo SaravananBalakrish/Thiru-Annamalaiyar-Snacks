@@ -21,7 +21,8 @@ drizzle/
 
 # env
 .env
-.env.production
+.env.*
+!.env.example
 
 # logs
 logs/
@@ -47,3 +48,8 @@ coverage/
 
 # OS
 Thumbs.db
+
+# Safety net: never commit ad-hoc migration scripts that may contain credentials
+run-migration*.mjs
+run-migration*.js
+run-migration*.ts
