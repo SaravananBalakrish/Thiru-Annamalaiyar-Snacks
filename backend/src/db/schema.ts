@@ -58,14 +58,18 @@ export const addresses = pgTable('addresses', {
   userId: integer('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+  fullName: varchar('full_name', { length: 100 }).notNull(),
+  phoneNumber: varchar('phone_number', { length: 20 }).notNull(),
   street: varchar('street', { length: 255 }).notNull(),
+  landmark: text('landmark'),
   city: varchar('city', { length: 100 }).notNull(),
   state: varchar('state', { length: 100 }).notNull(),
   zipCode: varchar('zip_code', { length: 20 }).notNull(),
-  country: varchar('country', { length: 100 }).notNull(),
+  country: varchar('country', { length: 100 }).notNull().default('India'),
   addressType: varchar('address_type', { length: 50 }).default('home'), // home, work, billing, shipping
-  isDefault: boolean('is_default').default(false),
+  isDefault: boolean('is_default').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 export const reviews = pgTable('reviews', {
