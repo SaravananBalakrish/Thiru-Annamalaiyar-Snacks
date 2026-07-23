@@ -142,6 +142,27 @@ authRoutes.post('/validate', authMiddleware, async (c: Context) => {
 });
 
 // =============================================================================
+// Me — returns the current authenticated user's id and role.
+// Used by the Flutter splash page to route to the correct dashboard.
+// =============================================================================
+
+authRoutes.get('/me', authMiddleware, async (c: Context) => {
+    const userId = c.get('userId') as number;
+
+    const [user] = await db
+        .select({ id: users.id, phoneNumber: users.phoneNumber, role: users.role })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+    if (!user) {
+        return c.json({ success: false, message: 'User not found' }, 404);
+    }
+
+    return c.json({ success: true, data: user });
+});
+
+// =============================================================================
 // Logout — revoke refresh token + blacklist the current access token
 // =============================================================================
 

@@ -13,6 +13,7 @@ import orderRoutes from './routes/orders.js';
 import authRoutes from './routes/auth.js';
 import addressRoutes from './routes/addresses.js';
 import reviewRoutes from './routes/reviews.js';
+import adminRoutes from './routes/admin.js';
 import { openapiSpec } from './openapi.js';
 
 const app = new OpenAPIHono();
@@ -47,6 +48,7 @@ app.route('/v1/cart', cartRoutes);
 app.route('/v1/orders', orderRoutes);
 app.route('/v1/addresses', addressRoutes);
 app.route('/v1/reviews', reviewRoutes);
+app.route('/v1/admin', adminRoutes);
 
 // Base OpenAPI configuration
 const PORT = Number(process.env.PORT) || 3000;

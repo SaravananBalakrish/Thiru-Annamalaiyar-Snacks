@@ -25,14 +25,19 @@ export const cartItems = pgTable('cart_items', {
   quantity: integer('quantity').notNull().default(1),
 });
 
+// Valid order statuses (enforced in admin routes via Zod):
+// 'pending' | 'confirmed' | 'packed' | 'out_for_delivery' | 'delivered' | 'rejected'
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').notNull(),
   totalPrice: numeric('total_price', { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
   paymentMethod: varchar('payment_method', { length: 50 }).notNull().default('upi'),
   paymentStatus: varchar('payment_status', { length: 50 }).notNull().default('pending'),
   transactionRef: varchar('transaction_ref', { length: 100 }),
+  status: varchar('status', { length: 50 }).notNull().default('pending'),
+  rejectionReason: text('rejection_reason'),
 });
 
 export const orderItems = pgTable('order_items', {
@@ -50,6 +55,7 @@ export const orderItems = pgTable('order_items', {
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   phoneNumber: varchar('phone_number', { length: 20 }).notNull().unique(),
+  role: varchar('role', { length: 20 }).notNull().default('customer'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
