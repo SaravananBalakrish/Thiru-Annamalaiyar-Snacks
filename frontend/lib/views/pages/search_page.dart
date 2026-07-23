@@ -14,11 +14,12 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
-  String _query = "";
+  final ValueNotifier<String> _queryNotifier = ValueNotifier("");
 
   @override
   void dispose() {
     _searchController.dispose();
+    _queryNotifier.dispose();
     super.dispose();
   }
 
@@ -38,23 +39,27 @@ class _SearchPageState extends State<SearchPage> {
         ),
         title: _buildSearchField(theme, colorScheme),
       ),
-      body: Consumer<ProductController>(
-        builder: (context, productController, _) {
-          final allProducts = productController.products;
-          final filteredProducts = _query.isEmpty
-              ? <Product>[]
-              : allProducts.where((p) {
-                  final queryLower = _query.toLowerCase();
-                  return p.name.toLowerCase().contains(queryLower) ||
-                      p.category.toLowerCase().contains(queryLower) ||
-                      p.tags.any((t) => t.toLowerCase().contains(queryLower));
-                }).toList();
+      body: ValueListenableBuilder<String>(
+        valueListenable: _queryNotifier,
+        builder: (context, query, _) {
+          return Consumer<ProductController>(
+            builder: (context, productController, _) {
+              final allProducts = productController.products;
+              if (query.isEmpty) return _buildEmptySearch(theme, colorScheme);
 
-          if (_query.isEmpty) return _buildEmptySearch(theme, colorScheme);
-          if (filteredProducts.isEmpty) {
-            return _buildNoResults(theme, colorScheme);
-          }
-          return _buildResults(filteredProducts);
+              final queryLower = query.toLowerCase();
+              final filteredProducts = allProducts.where((p) {
+                return p.name.toLowerCase().contains(queryLower) ||
+                    p.category.toLowerCase().contains(queryLower) ||
+                    p.tags.any((t) => t.toLowerCase().contains(queryLower));
+              }).toList();
+
+              if (filteredProducts.isEmpty) {
+                return _buildNoResults(query, theme, colorScheme);
+              }
+              return _buildResults(filteredProducts);
+            },
+          );
         },
       ),
     );
@@ -81,17 +86,21 @@ class _SearchPageState extends State<SearchPage> {
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: kPaddingS),
-          suffixIcon: _query.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, size: kIconSmall),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => _query = "");
-                  },
-                )
-              : null,
+          suffixIcon: ValueListenableBuilder<String>(
+            valueListenable: _queryNotifier,
+            builder: (context, query, _) {
+              if (query.isEmpty) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.clear, size: kIconSmall),
+                onPressed: () {
+                  _searchController.clear();
+                  _queryNotifier.value = "";
+                },
+              );
+            },
+          ),
         ),
-        onChanged: (value) => setState(() => _query = value),
+        onChanged: (value) => _queryNotifier.value = value,
       ),
     );
   }
@@ -118,7 +127,7 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildNoResults(ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildNoResults(String query, ThemeData theme, ColorScheme colorScheme) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -137,7 +146,7 @@ class _SearchPageState extends State<SearchPage> {
           ),
           const SizedBox(height: kPaddingL),
           Text(
-            "$kNoResultsFor \"$_query\"",
+            "$kNoResultsFor \"$query\"",
             style: theme.textTheme.titleLarge,
           ),
           const SizedBox(height: kPaddingS),
@@ -151,6 +160,7 @@ class _SearchPageState extends State<SearchPage> {
       ),
     );
   }
+
 
   Widget _buildResults(List<Product> products) {
     return ListView.builder(

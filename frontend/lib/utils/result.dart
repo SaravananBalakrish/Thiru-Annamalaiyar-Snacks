@@ -19,6 +19,20 @@ sealed class Result<T> {
     Failure(exception: var e) => e,
   };
 
+  T getOrThrow() {
+    return switch (this) {
+      Success(value: var v) => v,
+      Failure(exception: var e) => throw e,
+    };
+  }
+
+  T getOrDefault(T defaultValue) {
+    return switch (this) {
+      Success(value: var v) => v,
+      Failure() => defaultValue,
+    };
+  }
+
   R fold<R>(R Function(T value) onSuccess, R Function(AppException exception) onFailure) {
     return switch (this) {
       Success(value: var v) => onSuccess(v),

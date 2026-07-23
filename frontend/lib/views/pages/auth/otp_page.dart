@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../main_screen.dart';
+import 'dart:async';
 import '../../../constants.dart';
 import '../../../services/api_service.dart';
 import '../../../services/storage_service.dart';
 
 class OTPPage extends StatefulWidget {
   final String phoneNumber;
-  const OTPPage({super.key, required this.phoneNumber});
+  final bool isSeller;
+  const OTPPage({super.key, required this.phoneNumber, this.isSeller = false});
 
   @override
   State<OTPPage> createState() => _OTPPageState();
@@ -58,16 +59,23 @@ class _OTPPageState extends State<OTPPage> {
 
     setState(() => _isLoading = true);
 
-    final token = await ApiService.verifyOtp(widget.phoneNumber, code);
+    final token = await ApiService.verifyOtp(
+      widget.phoneNumber,
+      code,
+      role: widget.isSeller ? 'admin' : null,
+    );
 
     setState(() => _isLoading = false);
 
     if (token != null) {
       await StorageService.saveToken(token);
+      // Explicitly set the role based on the app flavor/intended use
+      await StorageService.saveRole(widget.isSeller ? 'admin' : 'customer');
+
       if (mounted) {
-        Navigator.pushAndRemoveUntil(
+        Navigator.pushNamedAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
+          '/',
           (route) => false,
         );
       }

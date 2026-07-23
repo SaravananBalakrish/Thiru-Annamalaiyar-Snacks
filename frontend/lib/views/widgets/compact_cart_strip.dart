@@ -14,7 +14,7 @@ class CompactCartStrip extends StatelessWidget {
     return Selector2<CartController, ProductController, _CartStripData>(
       selector: (_, cart, pc) => _CartStripData(
         count: cart.totalCount,
-        totalPrice: cart.getTotalPrice(pc.products),
+        totalPrice: cart.getTotalPriceWithMap(pc.productsMap),
       ),
       builder: (context, data, child) {
         if (data.count == 0) return const SizedBox.shrink();

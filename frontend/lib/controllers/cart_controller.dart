@@ -38,28 +38,27 @@ class CartController extends ChangeNotifier with ErrorHandlerMixin {
   int get totalCount => _items.values.fold(0, (sum, qty) => sum + qty);
 
   double getTotalPrice(List<Product> products) {
+    final Map<int, Product> productMap = {for (var p in products) p.id: p};
+    return getTotalPriceWithMap(productMap);
+  }
+
+  double getTotalPriceWithMap(Map<int, Product> productsMap) {
     double total = 0;
     _items.forEach((id, qty) {
-      final product = products.firstWhere((p) => p.id == id,
-          orElse: () => Product(
-              id: id,
-              name: 'Unknown',
-              emoji: '',
-              price: 0,
-              unit: '',
-              category: '',
-              desc: '',
-              tags: []));
-      total += product.price * qty;
+      final product = productsMap[id];
+      if (product != null) {
+        total += product.price * qty;
+      }
     });
     return total;
   }
 
   Future<void> addItem(int productId) async {
+    // Optimistic UI update
+    _items[productId] = (_items[productId] ?? 0) + 1;
+    notifyListeners();
+
     await runSafe(() async {
-      _items[productId] = (_items[productId] ?? 0) + 1;
-      notifyListeners();
-      
       final token = await StorageService.getToken();
       if (token != null) {
         await ApiService.addToCart(productId, 1);
@@ -70,26 +69,34 @@ class CartController extends ChangeNotifier with ErrorHandlerMixin {
   }
 
   Future<void> removeItem(int productId) async {
-    if (_items.containsKey(productId)) {
-      await runSafe(() async {
-        final token = await StorageService.getToken();
-        if (_items[productId]! > 1) {
-          _items[productId] = _items[productId]! - 1;
-          if (token != null) {
-            await ApiService.updateCartItem(productId, _items[productId]!);
-          }
-        } else {
-          _items.remove(productId);
-          if (token != null) {
-            await ApiService.removeFromCart(productId);
-          }
-        }
-        if (token == null) {
-          await _saveToStorage();
-        }
-        notifyListeners();
-      });
+    if (!_items.containsKey(productId)) return;
+
+    final int currentQty = _items[productId]!;
+    
+    // Optimistic UI update
+    if (currentQty > 1) {
+      _items[productId] = currentQty - 1;
+    } else {
+      _items.remove(productId);
     }
+    notifyListeners();
+
+    await runSafe(() async {
+      final token = await StorageService.getToken();
+      if (currentQty > 1) {
+        if (token != null) {
+          await ApiService.updateCartItem(productId, _items[productId] ?? currentQty - 1);
+        }
+      } else {
+        if (token != null) {
+          await ApiService.removeFromCart(productId);
+        }
+      }
+      
+      if (token == null) {
+        await _saveToStorage();
+      }
+    });
   }
 
   Future<void> clearCart() async {

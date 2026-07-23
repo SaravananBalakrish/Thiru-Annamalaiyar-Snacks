@@ -23,8 +23,6 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final cart = context.watch<CartController>();
-    final qty = cart.items[product.id] ?? 0;
 
     return GestureDetector(
       onTap: () => _showProductDetails(context),
@@ -189,43 +187,48 @@ class ProductCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      if (qty == 0)
-                        IconButton.filled(
-                          onPressed: () => context.read<CartController>().addItem(product.id),
-                          icon: const Icon(Icons.add, size: 20),
-                          style: IconButton.styleFrom(
-                            backgroundColor: colorScheme.primary,
-                            foregroundColor: colorScheme.onPrimary,
-                          ),
-                        )
-                      else
-                        Container(
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                onPressed: () => context.read<CartController>().removeItem(product.id),
-                                icon: Icon(Icons.remove, size: 16, color: colorScheme.onPrimary),
-                                visualDensity: VisualDensity.compact,
+                      Selector<CartController, int>(
+                        selector: (_, cart) => cart.items[product.id] ?? 0,
+                        builder: (context, qty, _) {
+                          if (qty == 0) {
+                            return IconButton.filled(
+                              onPressed: () => context.read<CartController>().addItem(product.id),
+                              icon: const Icon(Icons.add, size: 20),
+                              style: IconButton.styleFrom(
+                                backgroundColor: colorScheme.primary,
+                                foregroundColor: colorScheme.onPrimary,
                               ),
-                              Text(
-                                qty.toString(),
-                                style: TextStyle(
-                                  color: colorScheme.onPrimary,
-                                  fontWeight: FontWeight.bold,
+                            );
+                          }
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () => context.read<CartController>().removeItem(product.id),
+                                  icon: Icon(Icons.remove, size: 16, color: colorScheme.onPrimary),
+                                  visualDensity: VisualDensity.compact,
                                 ),
-                              ),
-                              IconButton(
-                                onPressed: () => context.read<CartController>().addItem(product.id),
-                                icon: Icon(Icons.add, size: 16, color: colorScheme.onPrimary),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                            ],
-                          ),
-                        ),
+                                Text(
+                                  qty.toString(),
+                                  style: TextStyle(
+                                    color: colorScheme.onPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => context.read<CartController>().addItem(product.id),
+                                  icon: Icon(Icons.add, size: 16, color: colorScheme.onPrimary),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ],
@@ -236,4 +239,5 @@ class ProductCard extends StatelessWidget {
       ),
     );
   }
+
 }

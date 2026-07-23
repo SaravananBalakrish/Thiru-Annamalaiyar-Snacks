@@ -41,22 +41,13 @@ class _CartPageState extends State<CartPage> {
           ),
         ),
       ),
-      body: Consumer<CartController>(
-        builder: (context, cart, _) {
-          if (cart.items.isEmpty) {
+      body: Selector<CartController, bool>(
+        selector: (_, cart) => cart.items.isEmpty,
+        builder: (context, isEmpty, _) {
+          if (isEmpty) {
             return _buildEmptyState(context, theme);
           }
-          return Consumer<ProductController>(
-            builder: (context, productController, _) {
-              return _buildCartContent(
-                context,
-                cart,
-                productController,
-                productController.products,
-                theme,
-              );
-            },
-          );
+          return _buildCartContent(context, theme);
         },
       ),
     );
@@ -77,7 +68,7 @@ class _CartPageState extends State<CartPage> {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.shopping_basket_outlined,
+                Icons.shopping_cart_outlined,
                 size: 80,
                 color: colorScheme.primary.withValues(alpha: 0.5),
               ),
@@ -85,8 +76,7 @@ class _CartPageState extends State<CartPage> {
             const SizedBox(height: kPaddingL),
             Text(
               kEmptyCartTitle,
-              style: theme.textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: kPaddingS),
             Text(
@@ -99,8 +89,14 @@ class _CartPageState extends State<CartPage> {
             ),
             const SizedBox(height: kPaddingXL),
             ElevatedButton(
-              onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                  context, '/menu', (route) => false),
+              onPressed: () {
+                final mainScreen = MainScreen.of(context);
+                Navigator.of(context).popUntil((route) => route.isFirst);
+                mainScreen?.setIndex(0);
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: kPaddingXL, vertical: kPaddingM),
+              ),
               child: const Text(kStartShopping),
             ),
           ],
@@ -109,13 +105,7 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Widget _buildCartContent(
-    BuildContext context,
-    CartController cart,
-    ProductController productController,
-    List<Product> products,
-    ThemeData theme,
-  ) {
+  Widget _buildCartContent(BuildContext context, ThemeData theme) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(kPaddingM),
@@ -131,69 +121,93 @@ class _CartPageState extends State<CartPage> {
           const SizedBox(height: kPaddingL),
           Text(
             kOrderItems,
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: kPaddingS),
-          ...cart.items.entries.map((entry) {
-            final product = products.firstWhere((p) => p.id == entry.key,
-                orElse: () => Product.empty(entry.key));
-            return CartItemTile(
-              product: product,
-              quantity: entry.value,
-              onAdd: () => cart.addItem(product.id),
-              onRemove: () => cart.removeItem(product.id),
-            );
-          }),
+          
+          // Optimized: Only the list rebuilds when item count changes
+          Selector<CartController, List<int>>(
+            selector: (_, cart) => cart.items.keys.toList(),
+            builder: (context, productIds, _) {
+              final productController = context.read<ProductController>();
+              final cart = context.read<CartController>();
+              
+              return Column(
+                children: productIds.map((id) {
+                  final product = productController.productsMap[id] ?? Product.empty(id);
+                  return Selector<CartController, int>(
+                    selector: (_, c) => c.items[id] ?? 0,
+                    builder: (context, qty, _) {
+                      if (qty == 0) return const SizedBox.shrink();
+                      return CartItemTile(
+                        product: product,
+                        quantity: qty,
+                        onAdd: () => cart.addItem(id),
+                        onRemove: () => cart.removeItem(id),
+                      );
+                    },
+                  );
+                }).toList(),
+              );
+            },
+          ),
+          
           const SizedBox(height: kPaddingL),
-          _buildYouMayAlsoLike(cart, productController, theme),
+          _buildYouMayAlsoLike(theme),
           const SizedBox(height: kPaddingL),
           _buildNoteSection(theme),
           const SizedBox(height: kPaddingL),
-          OrderSummaryCard(
-            itemTotal: cart.getTotalPrice(products),
-            deliveryFee: 0.0, // Calculate based on city if needed
+          
+          // Optimized: Only the price summary rebuilds
+          Selector2<CartController, ProductController, double>(
+            selector: (_, cart, pc) => cart.getTotalPriceWithMap(pc.productsMap),
+            builder: (context, totalPrice, _) => OrderSummaryCard(
+              itemTotal: totalPrice,
+              deliveryFee: 0.0,
+            ),
           ),
+          
           const SizedBox(height: kPaddingL),
-          _buildActionButtons(context, cart, products, theme),
+          _buildActionButtons(context, theme),
           const SizedBox(height: kPaddingXL),
         ],
       ),
     );
   }
 
+
   Widget _buildActionButtons(
     BuildContext context,
-    CartController cart,
-    List<Product> products,
-      ThemeData theme,
+    ThemeData theme,
   ) {
-    return ElevatedButton(
-      onPressed: _isPlacingOrder
-          ? null
-          : () => _handlePlaceOrder(context, cart, products, theme),
-      style: ElevatedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 54),
-      ),
-      child: _isPlacingOrder
-          ? SizedBox(
-              height: 24,
-              width: 24,
-              child: CircularProgressIndicator(
-                color: theme.colorScheme.onPrimary,
-                strokeWidth: 2,
+    return Selector2<CartController, ProductController, double>(
+      selector: (_, cart, pc) => cart.getTotalPriceWithMap(pc.productsMap),
+      builder: (context, total, _) => ElevatedButton(
+        onPressed: _isPlacingOrder ? null : () => _handlePlaceOrder(context, theme),
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 54),
+        ),
+        child: _isPlacingOrder
+            ? SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  color: theme.colorScheme.onPrimary,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(kPlaceOrderTitle, style: TextStyle(fontSize: 18)),
+                  SizedBox(width: kPaddingS),
+                  Icon(Icons.arrow_forward_ios, size: 16),
+                ],
               ),
-            )
-          : const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(kPlaceOrderTitle, style: TextStyle(fontSize: 18)),
-                SizedBox(width: kPaddingS),
-                Icon(Icons.arrow_forward_ios, size: 16),
-              ],
-            ),
+      ),
     );
   }
+
 
   Widget _buildLocationCard(BuildContext context, ThemeData theme) {
     final colorScheme = theme.colorScheme;
@@ -213,7 +227,7 @@ class _CartPageState extends State<CartPage> {
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const SavedAddressesPage(isSelectionMode: true),
+                    builder: (context) => const SavedAddressesPage(),
                   ),
                 );
                 if (result != null && result is Address) {
@@ -313,46 +327,45 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Widget _buildYouMayAlsoLike(
-    CartController cart,
-    ProductController productController,
-    ThemeData theme,
-  ) {
-    final recommendations =
-        productController.getRecommendations(cart.items.keys.toList());
-    if (recommendations.isEmpty) return const SizedBox.shrink();
-    final colorScheme = theme.colorScheme;
+  Widget _buildYouMayAlsoLike(ThemeData theme) {
+    final productController = context.read<ProductController>();
+    return Selector<CartController, List<int>>(
+      selector: (_, cart) => cart.items.keys.toList(),
+      builder: (context, productIds, _) {
+        final recommendations = productController.getRecommendations(productIds);
+        if (recommendations.isEmpty) return const SizedBox.shrink();
+        final colorScheme = theme.colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          kYouMayLike,
-          style: theme.textTheme.titleSmall
-              ?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: kPaddingS),
-        SizedBox(
-          height: 110,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: recommendations.length,
-            itemBuilder: (context, index) =>
-                _buildSmallProductCard(context, cart, recommendations[index], theme),
-          ),
-        ),
-      ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              kYouMayLike,
+              style: theme.textTheme.titleSmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: kPaddingS),
+            SizedBox(
+              height: 110,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: recommendations.length,
+                itemBuilder: (context, index) => _buildSmallProductCard(context, recommendations[index], theme),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildSmallProductCard(
     BuildContext context,
-    CartController cart,
     Product product,
     ThemeData theme,
   ) {
     final colorScheme = theme.colorScheme;
+    final cart = context.read<CartController>();
     return Card(
       margin: const EdgeInsets.only(right: kPaddingM, bottom: kPaddingXS),
       child: Container(
@@ -435,13 +448,13 @@ class _CartPageState extends State<CartPage> {
 
   Future<void> _handlePlaceOrder(
     BuildContext context,
-    CartController cart,
-    List<Product> products,
-      ThemeData theme,
+    ThemeData theme,
   ) async {
+    final cart = context.read<CartController>();
+    final productController = context.read<ProductController>();
     final orderController = context.read<OrderController>();
     final addressController = context.read<AddressController>();
-    final total = cart.getTotalPrice(products);
+    final total = cart.getTotalPriceWithMap(productController.productsMap);
 
     Address? finalAddress = addressController.selectedAddress;
 
@@ -475,8 +488,7 @@ class _CartPageState extends State<CartPage> {
     final apiOrder = apiOrderResult.valueOrNull;
     final orderId = apiOrder?.id?.toString() ?? "PENDING";
     final List<OrderItem> items = cart.items.entries.map((entry) {
-      final product = products.firstWhere((p) => p.id == entry.key,
-          orElse: () => Product.empty(entry.key));
+      final product = productController.productsMap[entry.key] ?? Product.empty(entry.key);
       return OrderItem(product: product, quantity: entry.value);
     }).toList();
 
@@ -522,7 +534,7 @@ class _CartPageState extends State<CartPage> {
           TextButton(
             onPressed: () async {
               cart.clearCart();
-              await orderController.loadOrders(products);
+              await orderController.loadOrders(productController.products);
               if (dialogContext.mounted) {
                 Navigator.of(dialogContext).pop(); // pop dialog
               }

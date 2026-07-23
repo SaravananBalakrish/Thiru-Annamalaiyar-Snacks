@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/address.dart';
 import '../../controllers/address_controller.dart';
+
+import '../../controllers/product_controller.dart';
+import '../../constants.dart';
 import 'home_page.dart';
 import 'cart_page.dart';
 import 'settings_page.dart';
 import 'category_menu_page.dart';
-import 'search_page.dart';
 import 'saved_addresses_page.dart';
 import '../widgets/compact_cart_strip.dart';
+import '../widgets/product_list_item.dart';
+import '../../models/product.dart';
 
 class MainScreen extends StatefulWidget {
   final int initialIndex;
@@ -63,6 +67,7 @@ class MainScreenState extends State<MainScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Cart strip is now inside the bottom sheet panel — no FAB floating over content
               if (_selectedIndex != 2) const CompactCartStrip(),
               BottomNavigationBar(
                 elevation: 0,
@@ -107,7 +112,12 @@ class MainScreenState extends State<MainScreen> {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10, left: 16, right: 16, bottom: 10),
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 10,
+        left: 16,
+        right: 16,
+        bottom: 10,
+      ),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         boxShadow: [
@@ -138,7 +148,10 @@ class MainScreenState extends State<MainScreen> {
                     child: InkWell(
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SavedAddressesPage(isSelectionMode: true)),
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const SavedAddressesPage(),
+                        ),
                       ).then((value) {
                         if (value != null && value is Address) {
                           addressController.setSelectedAddress(value);
@@ -151,13 +164,18 @@ class MainScreenState extends State<MainScreen> {
                             children: [
                               Text(
                                 selectedAddress?.label ?? "Select Location",
-                                style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 16),
+                                style: TextStyle(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
                               ),
                               Icon(Icons.arrow_drop_down, color: colorScheme.primary),
                             ],
                           ),
                           Text(
-                            selectedAddress?.fullAddress ?? "Tap to set delivery address",
+                            selectedAddress?.fullAddress ??
+                                "Tap to set delivery address",
                             style: theme.textTheme.bodySmall?.copyWith(fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -171,17 +189,250 @@ class MainScreenState extends State<MainScreen> {
             },
           ),
           const SizedBox(height: 12),
-          TextField(
-            readOnly: true,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchPage())),
-            decoration: InputDecoration(
-              hintText: "Search traditional snacks...",
-              prefixIcon: Icon(Icons.search, color: colorScheme.primary),
+          // Search bar tapping opens a modal bottom sheet overlay — not a new page
+          GestureDetector(
+            onTap: () => _showSearchBottomSheet(context),
+            child: AbsorbPointer(
+              child: TextField(
+                readOnly: true,
+                decoration: InputDecoration(
+                  hintText: "Search traditional snacks...",
+                  prefixIcon: Icon(Icons.search, color: colorScheme.primary),
+                ),
+              ),
             ),
           ),
         ],
       ),
     );
   }
+
+  /// Shows the search UI as a modal bottom sheet overlay.
+  /// This avoids the FAB/content overlap issue when the keyboard appears.
+  void _showSearchBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.4),
+      builder: (ctx) => const _SearchBottomSheet(),
+    );
+  }
 }
 
+// ---------------------------------------------------------------------------
+// Search bottom sheet — appears as an overlay without hiding the main content
+// ---------------------------------------------------------------------------
+class _SearchBottomSheet extends StatefulWidget {
+  const _SearchBottomSheet();
+
+  @override
+  State<_SearchBottomSheet> createState() => _SearchBottomSheetState();
+}
+
+class _SearchBottomSheetState extends State<_SearchBottomSheet> {
+  final TextEditingController _controller = TextEditingController();
+  final ValueNotifier<String> _query = ValueNotifier('');
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _query.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    // Sheet takes up most of the screen height so results are visible
+    final sheetHeight = MediaQuery.of(context).size.height * 0.85;
+
+    return Container(
+      height: sheetHeight,
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Drag handle
+          Container(
+            margin: const EdgeInsets.only(top: 12, bottom: 4),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Search field row
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.search, color: colorScheme.primary, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _controller,
+                            autofocus: true,
+                            style: theme.textTheme.bodyLarge,
+                            decoration: InputDecoration(
+                              hintText: kSearchSnacksHint,
+                              hintStyle: TextStyle(
+                                color: colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.5),
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 12),
+                              suffixIcon: ValueListenableBuilder<String>(
+                                valueListenable: _query,
+                                builder: (context2, q, w) => q.isEmpty
+                                    ? const SizedBox.shrink()
+                                    : IconButton(
+                                        icon: const Icon(Icons.clear, size: 18),
+                                        onPressed: () {
+                                          _controller.clear();
+                                          _query.value = '';
+                                        },
+                                      ),
+                              ),
+                            ),
+                            onChanged: (v) => _query.value = v,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: colorScheme.primary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Results area
+          Expanded(
+            child: ValueListenableBuilder<String>(
+              valueListenable: _query,
+              builder: (ctx, query, _) {
+                return Consumer<ProductController>(
+                  builder: (ctx2, pc, child) {
+                    if (query.isEmpty) {
+                      return _buildEmptyHint(theme, colorScheme);
+                    }
+                    final q = query.toLowerCase();
+                    final results = pc.products.where((p) {
+                      return p.name.toLowerCase().contains(q) ||
+                          p.category.toLowerCase().contains(q) ||
+                          p.tags.any((t) => t.toLowerCase().contains(q));
+                    }).toList();
+
+                    if (results.isEmpty) {
+                      return _buildNoResults(query, theme, colorScheme);
+                    }
+                    return _buildResults(results);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyHint(ThemeData theme, ColorScheme colorScheme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.search_rounded,
+            size: 72,
+            color: colorScheme.primary.withValues(alpha: 0.12),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            kSearchSnacksAction,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoResults(String query, ThemeData theme, ColorScheme colorScheme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.sentiment_dissatisfied_rounded,
+              size: 52,
+              color: colorScheme.primary.withValues(alpha: 0.3),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            "$kNoResultsFor \"$query\"",
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            kTrySearchingElse,
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResults(List<Product> products) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(kPaddingM),
+      physics: const BouncingScrollPhysics(),
+      itemCount: products.length,
+      itemBuilder: (context, index) => ProductListItem(product: products[index]),
+    );
+  }
+}

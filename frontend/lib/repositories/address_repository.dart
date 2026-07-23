@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
+
 import '../models/address.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
@@ -9,8 +11,10 @@ abstract class IAddressRepository {
   Future<Result<List<Address>>> getAddresses();
   Future<Result<Address>> addAddress(Address address);
   Future<Result<void>> deleteAddress(String id);
-  Future<Result<void>> updateAddress(Address address);
+  Future<Result<Address>> updateAddress(Address address);
   Future<Result<void>> setDefaultAddress(String id);
+  Future<Result<void>> setSelectedAddress(String id);
+  Future<Result<Address?>> getSelectedAddress();
 }
 
 class AddressRepository implements IAddressRepository {
@@ -25,6 +29,7 @@ class AddressRepository implements IAddressRepository {
       
       return Result.success(remoteAddresses);
     } catch (e) {
+      debugPrint('Address API Fetch failed, falling back to local: $e');
       // Fallback to local storage on network error
       try {
         final localData = await StorageService.getAddresses();
@@ -62,11 +67,17 @@ class AddressRepository implements IAddressRepository {
   }
 
   @override
-  Future<Result<void>> updateAddress(Address address) async {
-    // Backend uses POST for create/update in this implementation
-    return addAddress(address).then((value) => value.isSuccess 
-      ? Result.success(null)
-      : Result.failure(value.exceptionOrNull!));
+  Future<Result<Address>> updateAddress(Address address) async {
+    try {
+      final updated = await ApiService.updateAddress(address);
+      if (updated != null) {
+        await _refreshLocalCache();
+        return Result.success(updated);
+      }
+      return Result.failure(AppException('Failed to update address.'));
+    } catch (e) {
+      return Result.failure(FetchDataException('Network error while updating address.'));
+    }
   }
 
   @override
@@ -77,6 +88,34 @@ class AddressRepository implements IAddressRepository {
       return Result.success(null);
     } catch (e) {
       return Result.failure(AppException('Failed to set default address.'));
+    }
+  }
+
+  @override
+  Future<Result<void>> setSelectedAddress(String id) async {
+    // We no longer save the selected address locally,
+    // the app will rely on the backend's default address.
+    return Result.success(null);
+  }
+
+  @override
+  Future<Result<Address?>> getSelectedAddress() async {
+    try {
+      final addressesResult = await getAddresses();
+      if (addressesResult.isSuccess) {
+        final addresses = addressesResult.getOrThrow();
+        if (addresses.isEmpty) return Result.success(null);
+
+        // Return the backend's default address instead of local storage
+        final defaultAddress = addresses.cast<Address?>().firstWhere(
+          (a) => a!.isDefault, 
+          orElse: () => addresses.first
+        );
+        return Result.success(defaultAddress);
+      }
+      return Result.success(null);
+    } catch (e) {
+      return Result.success(null); // Return null rather than failing UI
     }
   }
 

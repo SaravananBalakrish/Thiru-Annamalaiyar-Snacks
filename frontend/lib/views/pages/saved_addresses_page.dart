@@ -6,10 +6,25 @@ import '../../constants.dart';
 import '../../controllers/address_controller.dart';
 import '../../models/address.dart';
 
-class SavedAddressesPage extends StatelessWidget {
-  final bool isSelectionMode;
-  const SavedAddressesPage({super.key, this.isSelectionMode = false});
+class SavedAddressesPage extends StatefulWidget {
+  const SavedAddressesPage({super.key});
 
+  @override
+  State<SavedAddressesPage> createState() => _SavedAddressesPageState();
+}
+
+class _SavedAddressesPageState extends State<SavedAddressesPage> {
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    if(mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<AddressController>().loadAddresses();
+      });
+    }
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -17,7 +32,7 @@ class SavedAddressesPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isSelectionMode ? "Select Address" : kSavedAddresses,
+        title: Text(kSavedAddresses,
             style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
         backgroundColor: colorScheme.surface,
         elevation: 0,
@@ -28,7 +43,7 @@ class SavedAddressesPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (controller.isLoading && controller.addresses.isEmpty) {
+          if (controller.error != null && controller.addresses.isEmpty) {
             return _buildErrorState(theme, colorScheme, controller);
           }
 
@@ -43,14 +58,10 @@ class SavedAddressesPage extends StatelessWidget {
                 itemCount: controller.addresses.length,
                 itemBuilder: (context, index) {
                   final address = controller.addresses[index];
-                  return InkWell(
-                    onTap: isSelectionMode ? () => Navigator.pop(context, address) : null,
-                    child: _AddressCard(
-                      address: address,
-                      theme: theme,
-                      colorScheme: colorScheme,
-                      isSelectionMode: isSelectionMode,
-                    ),
+                  return _AddressCard(
+                    address: address,
+                    theme: theme,
+                    colorScheme: colorScheme,
                   );
                 },
               ),
@@ -66,7 +77,7 @@ class SavedAddressesPage extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddAddressOptions(context),
+        onPressed: () => _navigateToMapPicker(context),
         icon: const Icon(Icons.add),
         label: const Text("Add New Address"),
       ),
@@ -132,153 +143,18 @@ class SavedAddressesPage extends StatelessWidget {
       ),
     );
   }
-
-  void _showAddAddressOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(kRadiusL)),
-      ),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: kPaddingM),
-          ListTile(
-            leading: const Icon(Icons.map_outlined),
-            title: const Text("Select from Map"),
-            subtitle: const Text("Pick location using GPS"),
-            onTap: () {
-              Navigator.pop(context);
-              _navigateToMapPicker(context);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.edit_note_outlined),
-            title: const Text("Enter Manually"),
-            subtitle: const Text("Type your address details"),
-            onTap: () {
-              Navigator.pop(context);
-              _showAddAddressSheet(context);
-            },
-          ),
-          const SizedBox(height: kPaddingL),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _navigateToMapPicker(BuildContext context) async {
+  
+  Future<void> _navigateToMapPicker(BuildContext context, {Address? address}) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const MapPickerPage()),
+      MaterialPageRoute(builder: (context) => MapPickerPage(address: address)),
     );
 
-    if (result != null && context.mounted) {
-      _showAddAddressSheet(context, initialAddress: result['address']);
+    if (result == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(address != null ? "Address updated successfully" : "Address saved successfully")),
+      );
     }
-  }
-
-  void _showAddAddressSheet(BuildContext context, {String? initialAddress}) {
-    final labelController = TextEditingController();
-    final fullNameController = TextEditingController();
-    final phoneController = TextEditingController();
-    final streetController = TextEditingController(text: initialAddress);
-    final landmarkController = TextEditingController();
-    final cityController = TextEditingController();
-    final stateController = TextEditingController(text: "Tamil Nadu");
-    final zipController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: kPaddingL,
-          right: kPaddingL,
-          top: kPaddingL,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text("Add New Address", style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: kPaddingL),
-              TextField(
-                controller: labelController,
-                decoration: const InputDecoration(labelText: "Label (e.g. Home, Office)"),
-              ),
-              const SizedBox(height: kPaddingM),
-              TextField(
-                controller: fullNameController,
-                decoration: const InputDecoration(labelText: "Full Name"),
-              ),
-              const SizedBox(height: kPaddingM),
-              TextField(
-                controller: phoneController,
-                decoration: const InputDecoration(labelText: "Phone Number"),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: kPaddingM),
-              TextField(
-                controller: streetController,
-                decoration: const InputDecoration(labelText: "Street / Area"),
-                maxLines: 2,
-              ),
-              const SizedBox(height: kPaddingM),
-              TextField(
-                controller: landmarkController,
-                decoration: const InputDecoration(labelText: "Landmark (Optional)"),
-              ),
-              const SizedBox(height: kPaddingM),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: cityController,
-                      decoration: const InputDecoration(labelText: "City"),
-                    ),
-                  ),
-                  const SizedBox(width: kPaddingM),
-                  Expanded(
-                    child: TextField(
-                      controller: zipController,
-                      decoration: const InputDecoration(labelText: "Zip Code"),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: kPaddingL),
-              ElevatedButton(
-                onPressed: () {
-                  if (labelController.text.isNotEmpty &&
-                      streetController.text.isNotEmpty &&
-                      cityController.text.isNotEmpty &&
-                      fullNameController.text.isNotEmpty &&
-                      phoneController.text.isNotEmpty) {
-                    context.read<AddressController>().addAddress(
-                          labelController.text,
-                          streetController.text,
-                          cityController.text,
-                          fullName: fullNameController.text,
-                          phoneNumber: phoneController.text,
-                          landmark: landmarkController.text,
-                          state: stateController.text,
-                          zipCode: zipController.text,
-                        );
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text("Save Address"),
-              ),
-              const SizedBox(height: kPaddingL),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 
@@ -286,13 +162,11 @@ class _AddressCard extends StatelessWidget {
   final Address address;
   final ThemeData theme;
   final ColorScheme colorScheme;
-  final bool isSelectionMode;
 
   const _AddressCard({
     required this.address,
     required this.theme,
     required this.colorScheme,
-    this.isSelectionMode = false,
   });
 
   @override
@@ -323,26 +197,37 @@ class _AddressCard extends StatelessWidget {
                     ),
                     child: Text("DEFAULT", style: TextStyle(fontSize: 10, color: colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold)),
                   ),
-                if (!isSelectionMode)
-                  PopupMenuButton(
-                    itemBuilder: (context) => [
-                      if (!address.isDefault)
-                        const PopupMenuItem(value: 'default', child: Text("Set as Default")),
-                      const PopupMenuItem(value: 'delete', child: Text("Delete")),
-                    ],
-                    onSelected: (value) {
-                      if (value == 'delete') {
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      onPressed: () {
+                        context.findAncestorStateOfType<_SavedAddressesPageState>()
+                            ?._navigateToMapPicker(context, address: address);
+                      },
+                      visualDensity: VisualDensity.compact,
+                      tooltip: "Edit",
+                    ),
+                    if (!address.isDefault)
+                      IconButton(
+                        icon: const Icon(Icons.check_circle_outline, size: 20),
+                        onPressed: () {
+                          context.read<AddressController>().setDefault(address.id);
+                        },
+                        visualDensity: VisualDensity.compact,
+                        tooltip: "Set as Default",
+                      ),
+                    IconButton(
+                      icon: Icon(Icons.delete_outline, size: 20, color: colorScheme.error),
+                      onPressed: () {
                         context.read<AddressController>().deleteAddress(address.id);
-                      } else if (value == 'default') {
-                        context.read<AddressController>().setDefault(address.id);
-                      }
-                    },
-                  ),
-                if (isSelectionMode)
-                  Padding(
-                    padding: const EdgeInsets.only(left: kPaddingS),
-                    child: Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
-                  ),
+                      },
+                      visualDensity: VisualDensity.compact,
+                      tooltip: "Delete",
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: kPaddingS),

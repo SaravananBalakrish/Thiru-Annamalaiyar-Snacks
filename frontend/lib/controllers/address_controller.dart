@@ -23,14 +23,19 @@ class AddressController extends ChangeNotifier with ErrorHandlerMixin {
       return r.fold((value) => value, (exception) => throw exception);
     });
     
-    result.ifSuccess((data) {
-      _addresses = data;
-      _updateSelectedAddress();
-    });
+    if (result.isSuccess) {
+      _addresses = result.valueOrNull!;
+      await _initSelectedAddress();
+    }
   }
 
-  void _updateSelectedAddress() {
-    if (_addresses.isNotEmpty) {
+  Future<void> _initSelectedAddress() async {
+    final selectedResult = await _repository.getSelectedAddress();
+    final selected = selectedResult.getOrDefault(null);
+    
+    if (selected != null && _addresses.any((a) => a.id == selected.id)) {
+      _selectedAddress = _addresses.firstWhere((a) => a.id == selected.id);
+    } else if (_addresses.isNotEmpty) {
       try {
         _selectedAddress = _addresses.firstWhere((a) => a.isDefault);
       } catch (_) {
@@ -39,17 +44,19 @@ class AddressController extends ChangeNotifier with ErrorHandlerMixin {
     } else {
       _selectedAddress = null;
     }
+    notifyListeners();
   }
 
-  void setSelectedAddress(Address address) {
+  Future<void> setSelectedAddress(Address address) async {
     _selectedAddress = address;
     notifyListeners();
+    await _repository.setSelectedAddress(address.id);
   }
 
   Future<void> addAddress(String label, String street, String city,
       {String? fullName, String? phoneNumber, String? landmark, String? state, String? zipCode, double? latitude, double? longitude}) async {
     final newAddress = Address(
-      id: '', // Backend will generate ID
+      id: '',
       label: label,
       fullName: fullName ?? 'User',
       phoneNumber: phoneNumber ?? '',
@@ -62,16 +69,40 @@ class AddressController extends ChangeNotifier with ErrorHandlerMixin {
       latitude: latitude,
       longitude: longitude,
     );
-
+    
     final result = await runSafeResult(() async {
       final r = await _repository.addAddress(newAddress);
       return r.fold((value) => value, (exception) => throw exception);
     });
     
-    result.ifSuccess((saved) {
+    if (result.isSuccess) {
+      final saved = result.valueOrNull!;
       _addresses.add(saved);
-      _selectedAddress ??= saved;
+      if (_selectedAddress == null) {
+        await setSelectedAddress(saved);
+      } else {
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> updateAddress(Address address) async {
+    final result = await runSafeResult(() async {
+      final r = await _repository.updateAddress(address);
+      return r.fold((value) => value, (exception) => throw exception);
     });
+    
+    if (result.isSuccess) {
+      final updated = result.valueOrNull!;
+      final index = _addresses.indexWhere((a) => a.id == updated.id);
+      if (index != -1) {
+        _addresses[index] = updated;
+        if (_selectedAddress?.id == updated.id) {
+          _selectedAddress = updated;
+        }
+        notifyListeners();
+      }
+    }
   }
 
   Future<void> deleteAddress(String id) async {
@@ -80,14 +111,15 @@ class AddressController extends ChangeNotifier with ErrorHandlerMixin {
       return r.fold((value) => value, (exception) => throw exception);
     });
     
-    result.ifSuccess((_) {
+    if (result.isSuccess) {
       _addresses.removeWhere((element) => element.id == id);
-      if (_addresses.isNotEmpty && !_addresses.any((element) => element.isDefault)) {
-        setDefault(addresses[0].id);
+      if (_selectedAddress?.id == id) {
+        _selectedAddress = null;
+        await _initSelectedAddress();
       } else {
-         _updateSelectedAddress();
+        notifyListeners();
       }
-    });
+    }
   }
 
   Future<void> setDefault(String id) async {
@@ -96,11 +128,16 @@ class AddressController extends ChangeNotifier with ErrorHandlerMixin {
       return r.fold((value) => value, (exception) => throw exception);
     });
     
-    result.ifSuccess((_) {
+    if (result.isSuccess) {
       _addresses = _addresses.map((addr) {
         return addr.copyWith(isDefault: addr.id == id);
       }).toList();
-      _updateSelectedAddress();
-    });
+      notifyListeners();
+      // Optionally update selected address to the new default if preferred
+      try {
+        final newDefault = _addresses.firstWhere((a) => a.id == id);
+        await setSelectedAddress(newDefault);
+      } catch (_) {}
+    }
   }
 }

@@ -4,7 +4,9 @@ import '../../../constants.dart';
 import '../../../services/api_service.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final bool isSeller;
+
+  const LoginPage({super.key, this.isSeller = false});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -28,11 +30,15 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final success = await ApiService.requestOtp(phone);
       if (success) {
+        print("isSeller :: ${widget.isSeller}");
         if (mounted) {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OTPPage(phoneNumber: phone),
+              builder: (context) => OTPPage(
+                phoneNumber: phone,
+                isSeller: widget.isSeller,
+              ),
             ),
           );
         }
@@ -57,15 +63,17 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/home');
-            },
-            child: const Text("Skip"),
-          ),
-          const SizedBox(width: kPaddingM),
-        ],
+        actions: widget.isSeller
+            ? []
+            : [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/home');
+                  },
+                  child: const Text("Skip"),
+                ),
+                const SizedBox(width: kPaddingM),
+              ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: kPaddingL),
@@ -98,14 +106,14 @@ class _LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Welcome",
+                    widget.isSeller ? "Welcome Admin" : "Welcome",
                     style: theme.textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: kPaddingS),
                   Text(
-                    "Log in to your account",
+                    widget.isSeller ? "Log in to manage your store" : "Log in to your account",
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),

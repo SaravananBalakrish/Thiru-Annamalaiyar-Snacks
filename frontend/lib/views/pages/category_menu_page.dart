@@ -37,36 +37,50 @@ class _CategoryMenuPageState extends State<CategoryMenuPage> {
           ),
         ),
       ),
-      body: Consumer<ProductController>(
-        builder: (context, productController, _) {
-          final categories = productController.getCategories();
-          if (categories.isNotEmpty && !categories.contains(selectedCategory)) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) setState(() => selectedCategory = categories.first);
-            });
-          }
-
-          if (productController.isLoading) {
-            return const _ShimmerLoading();
-          }
-
-          return Row(
-            children: [
-              _Sidebar(
-                categories: categories,
-                selectedCategory: selectedCategory,
-                onCategorySelected: (cat) =>
-                    setState(() => selectedCategory = cat),
+      body: Column(
+        children: [
+          Selector<ProductController, bool>(
+            selector: (_, pc) => pc.isLoading,
+            builder: (context, isLoading, child) {
+              if (isLoading) return const Expanded(child: _ShimmerLoading());
+              return child!;
+            },
+            child: Expanded(
+              child: Row(
+                children: [
+                  Selector<ProductController, List<String>>(
+                    selector: (_, pc) => pc.getCategories(),
+                    builder: (context, categories, _) {
+                      if (categories.isNotEmpty &&
+                          !categories.contains(selectedCategory)) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            setState(() => selectedCategory = categories.first);
+                          }
+                        });
+                      }
+                      return _Sidebar(
+                        categories: categories,
+                        selectedCategory: selectedCategory,
+                        onCategorySelected: (cat) =>
+                            setState(() => selectedCategory = cat),
+                      );
+                    },
+                  ),
+                  Expanded(
+                    child: Selector<ProductController, List<Product>>(
+                      selector: (_, pc) =>
+                          pc.getProductsByCategory(selectedCategory),
+                      builder: (context, products, _) {
+                        return _ProductList(products: products);
+                      },
+                    ),
+                  ),
+                ],
               ),
-              Expanded(
-                child: _ProductList(
-                  products:
-                      productController.getProductsByCategory(selectedCategory),
-                ),
-              ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -3,13 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:thiru_annamalaiyar_snacks/services/storage_service.dart';
-import 'controllers/cart_controller.dart';
-import 'controllers/order_controller.dart';
-import 'controllers/product_controller.dart';
-import 'controllers/address_controller.dart';
+import 'controllers/seller_order_controller.dart';
 import 'views/pages/auth/login_page.dart';
 import 'views/pages/splash_page.dart';
-import 'views/pages/main_screen.dart';
+import 'views/pages/seller/seller_dashboard_screen.dart';
 import 'constants.dart';
 import 'utils/theme.dart';
 
@@ -22,16 +19,10 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => CartController()),
-        ChangeNotifierProvider(create: (_) => OrderController()),
-        ChangeNotifierProvider(create: (_) => AddressController()),
-        ChangeNotifierProvider(
-          create: (context) => ProductController(
-            orderController: context.read<OrderController>(),
-          ),
-        ),
+        // ── Seller/admin controller ───────────────────────────────────────
+        ChangeNotifierProvider(create: (_) => SellerOrderController()),
       ],
-      child: const AnnamalaiyarApp(),
+      child: const AnnamalaiyarSellerApp(),
     ),
   );
 }
@@ -43,13 +34,13 @@ Future<void> _requestPermissions() async {
   ].request();
 }
 
-class AnnamalaiyarApp extends StatelessWidget {
-  const AnnamalaiyarApp({super.key});
+class AnnamalaiyarSellerApp extends StatelessWidget {
+  const AnnamalaiyarSellerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Annamalaiyar Chettinadu Snacks',
+      title: 'Annamalaiyar Seller',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: scaffoldMessengerKey,
       navigatorKey: navigatorKey,
@@ -58,12 +49,12 @@ class AnnamalaiyarApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       initialRoute: '/',
       routes: {
-        '/': (context) => const SplashPage(),
-        '/login': (context) => const LoginPage(),
-        '/home': (context) => const MainScreen(initialIndex: 0),
-        '/menu': (context) => const MainScreen(initialIndex: 1),
-        '/cart': (context) => const MainScreen(initialIndex: 2),
-        '/settings': (context) => const MainScreen(initialIndex: 3),
+        // We tell SplashPage to route successful auths directly to /seller-dashboard
+        '/': (context) => const SplashPage(defaultRoute: '/seller-dashboard'),
+        '/login': (context) => const LoginPage(isSeller: true),
+
+        // ── Seller surface (role = admin) ─────────────────────────────────
+        '/seller-dashboard': (context) => const SellerDashboardScreen(),
       },
     );
   }

@@ -22,9 +22,33 @@ class ApiService {
           return handler.next(options);
         },
         onError: (DioException e, handler) async {
-          if (e.response?.statusCode == 401) {
-            await StorageService.deleteToken();
-            _showErrorSnackBar("Session expired. Please login again.");
+          if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
+            if (e.response?.statusCode == 401) {
+              final data = e.response?.data;
+              final code = (data is Map) ? data['code'] as String? : null;
+
+              // TOKEN_EXPIRED — try a silent refresh before giving up
+              if (code == 'TOKEN_EXPIRED') {
+                final refreshed = await ApiService.tryRefreshToken();
+                if (refreshed) {
+                  // Retry the original request with the new access token
+                  final newToken = await StorageService.getToken();
+                  e.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+                  try {
+                    return handler.resolve(await _dio.fetch(e.requestOptions));
+                  } catch (retryError) {
+                    return handler.reject(retryError is DioException ? retryError : e);
+                  }
+                }
+              }
+            }
+
+            // Any 403 or other 401 (revoked, invalid, no refresh token) — force re-login
+            await StorageService.clearAllTokens();
+            final message = e.response?.statusCode == 403
+                ? "User not found"
+                : "Session expired. Please login again.";
+            _showErrorSnackBar(message);
             navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
             return handler.reject(e);
           }
@@ -114,6 +138,10 @@ class ApiService {
 
   static final api.EShopApi _api = api.EShopApi(dio: _dio);
 
+  /// Exposes the configured [Dio] instance so specialist services (e.g.
+  /// [SellerApiService]) can reuse auth interceptors without duplication.
+  static Dio get sharedDio => _dio;
+
   static Future<bool> requestOtp(String phone) async {
     final response = await _api.getAuthApi().v1AuthRequestOtpPost(
           v1AuthRequestOtpPostRequest: api.V1AuthRequestOtpPostRequest((b) => b..phone = phone),
@@ -121,26 +149,90 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  static Future<String?> verifyOtp(String phone, String code) async {
-    final response = await _api.getAuthApi().v1AuthVerifyOtpPost(
-          v1AuthVerifyOtpPostRequest: api.V1AuthVerifyOtpPostRequest((b) => b
-            ..phone = phone
-            ..code = code),
-        );
-    if (response.statusCode == 200) {
-      final dynamic data = (response as Response).data;
-      if (data is Map) {
-        return data['token'] as String?;
-      } else if (data is String) {
-        return data;
+  static Future<String?> verifyOtp(String phone, String code, {String? role}) async {
+    try {
+      final response = await _dio.post(
+        '/v1/auth/verify-otp',
+        data: {
+          'phone': phone,
+          'code': code,
+          if (role != null) 'role': role,
+        },
+      );
+      if (response.statusCode == 200) {
+        final dynamic data = response.data;
+        if (data is Map) {
+          final accessToken = data['accessToken'] as String?;
+          final refreshToken = data['refreshToken'] as String?;
+          if (accessToken != null && refreshToken != null) {
+            await StorageService.saveRefreshToken(refreshToken);
+            return accessToken;
+          }
+          return data['token'] as String?;
+        } else if (data is String) {
+          return data;
+        }
       }
-    }
+    } catch (_) {}
     return null;
+  }
+
+  /// Silently refresh the access token using the stored refresh token.
+  /// Returns true on success (new tokens saved), false if refresh failed.
+  static Future<bool> tryRefreshToken() async {
+    final refreshToken = await StorageService.getRefreshToken();
+    if (refreshToken == null) return false;
+
+    try {
+      final response = await _dio.post(
+        '/v1/auth/refresh',
+        data: {'refreshToken': refreshToken},
+        options: Options(extra: {'skipAuthRefresh': true}), // prevent retry loop
+      );
+      final data = response.data;
+      if (data is Map) {
+        final newAccessToken = data['accessToken'] as String?;
+        final newRefreshToken = data['refreshToken'] as String?;
+        if (newAccessToken != null && newRefreshToken != null) {
+          await StorageService.saveToken(newAccessToken);
+          await StorageService.saveRefreshToken(newRefreshToken);
+          return true;
+        }
+      }
+    } catch (_) {
+      // Refresh failed (expired, revoked) — caller will force re-login
+    }
+    return false;
+  }
+
+  /// Logout: revoke both tokens server-side, then clear local storage.
+  static Future<void> logout() async {
+    final refreshToken = await StorageService.getRefreshToken();
+    try {
+      await _dio.post(
+        '/v1/auth/logout',
+        data: refreshToken != null ? {'refreshToken': refreshToken} : {},
+      );
+    } catch (_) {
+      // Best-effort — always clear local tokens regardless
+    }
+    await StorageService.clearAllTokens();
   }
 
   static Future<bool> validateToken() async {
     final response = await _api.getAuthApi().v1AuthValidatePost();
     return response.statusCode == 200 && (response.data?.success ?? false);
+  }
+
+  /// Fetches the authenticated user's profile (id, phone, role).
+  /// Returns null on any failure — the caller decides what to do next.
+  static Future<Map<String, dynamic>?> fetchCurrentUser() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>('/v1/auth/me');
+      return response.data?['data'] as Map<String, dynamic>?;
+    } catch (_) {
+      return null;
+    }
   }
 
   static Future<List<model.Product>> fetchProducts() async {
@@ -243,28 +335,42 @@ class ApiService {
 
   // --- Address API ---
   static Future<List<Address>> fetchAddresses() async {
-    final response = await _api.getAddressesApi().v1AddressesGet();
-    if (response.statusCode == 200 && response.data?.data != null) {
-      return response.data!.data!.map((a) => Address(
-        id: a.id.toString(),
-        label: a.addressType?.name ?? 'Other',
-        fullName: a.fullName ?? '',
-        phoneNumber: a.phoneNumber ?? '',
-        street: a.street ?? '',
-        landmark: a.landmark,
-        city: a.city ?? '',
-        state: a.state ?? '',
-        zipCode: a.zipCode ?? '',
-        isDefault: a.isDefault ?? false,
-        latitude: a.latitude != null ? double.tryParse(a.latitude!) : null,
-        longitude: a.longitude != null ? double.tryParse(a.longitude!) : null,
-      )).toList();
+    try {
+      final response = await _api.getAddressesApi().v1AddressesGet();
+      if (response.statusCode == 200 && response.data?.data != null) {
+        return response.data!.data!
+            .map((a) => _mapApiAddressToModel(a))
+            .whereType<Address>()
+            .toList();
+      }
+      return [];
+    } catch (e, stacktrace) {
+      debugPrint('Error fetching addresses: $e');
+      debugPrint('Stacktrace: $stacktrace');
+      rethrow;
     }
-    return [];
   }
 
   static Future<Address?> saveAddress(Address address) async {
-    final input = api.AddressInput((b) => b
+    final input = _convertToAddressInput(address);
+    final response = await _api.getAddressesApi().v1AddressesPost(addressInput: input);
+    return _mapApiAddressToModel(response.data?.data);
+  }
+
+  static Future<Address?> updateAddress(Address address) async {
+    final intId = int.tryParse(address.id);
+    if (intId == null) return null;
+
+    final update = _convertToAddressUpdate(address);
+    final response = await _api.getAddressesApi().v1AddressesIdPut(
+      id: intId,
+      addressUpdate: update,
+    );
+    return _mapApiAddressToModel(response.data?.data);
+  }
+
+  static api.AddressInput _convertToAddressInput(Address address) {
+    return api.AddressInput((b) => b
       ..fullName = address.fullName
       ..phoneNumber = address.phoneNumber
       ..street = address.street
@@ -273,31 +379,64 @@ class ApiService {
       ..state = address.state
       ..zipCode = address.zipCode
       ..country = 'India'
-      ..addressType = api.AddressInputAddressTypeEnum.valueOf(address.label.toLowerCase())
+      ..addressType = _mapLabelToInputType(address.label)
       ..isDefault = address.isDefault
       ..latitude = address.latitude
       ..longitude = address.longitude
     );
+  }
 
-    final response = await _api.getAddressesApi().v1AddressesPost(addressInput: input);
-    final data = response.data?.data;
-    if (data != null) {
-      return Address(
-        id: data.id.toString(),
-        label: data.addressType?.name ?? 'Other',
-        fullName: data.fullName ?? '',
-        phoneNumber: data.phoneNumber ?? '',
-        street: data.street ?? '',
-        landmark: data.landmark,
-        city: data.city ?? '',
-        state: data.state ?? '',
-        zipCode: data.zipCode ?? '',
-        isDefault: data.isDefault ?? false,
-        latitude: data.latitude != null ? double.tryParse(data.latitude!) : null,
-        longitude: data.longitude != null ? double.tryParse(data.longitude!) : null,
-      );
-    }
-    return null;
+  static api.AddressUpdate _convertToAddressUpdate(Address address) {
+    return api.AddressUpdate((b) => b
+      ..fullName = address.fullName
+      ..phoneNumber = address.phoneNumber
+      ..street = address.street
+      ..landmark = address.landmark
+      ..city = address.city
+      ..state = address.state
+      ..zipCode = address.zipCode
+      ..country = 'India'
+      ..addressType = _mapLabelToUpdateType(address.label)
+      ..isDefault = address.isDefault
+      ..latitude = address.latitude
+      ..longitude = address.longitude
+    );
+  }
+
+  static api.AddressInputAddressTypeEnum _mapLabelToInputType(String label) {
+    final l = label.toLowerCase();
+    if (l == 'home') return api.AddressInputAddressTypeEnum.home;
+    if (l == 'work' || l == 'office') return api.AddressInputAddressTypeEnum.work;
+    if (l == 'billing') return api.AddressInputAddressTypeEnum.billing;
+    if (l == 'shipping') return api.AddressInputAddressTypeEnum.shipping;
+    return api.AddressInputAddressTypeEnum.other;
+  }
+
+  static api.AddressUpdateAddressTypeEnum _mapLabelToUpdateType(String label) {
+    final l = label.toLowerCase();
+    if (l == 'home') return api.AddressUpdateAddressTypeEnum.home;
+    if (l == 'work' || l == 'office') return api.AddressUpdateAddressTypeEnum.work;
+    if (l == 'billing') return api.AddressUpdateAddressTypeEnum.billing;
+    if (l == 'shipping') return api.AddressUpdateAddressTypeEnum.shipping;
+    return api.AddressUpdateAddressTypeEnum.other;
+  }
+
+  static Address? _mapApiAddressToModel(api.Address? a) {
+    if (a == null) return null;
+    return Address(
+      id: a.id.toString(),
+      label: a.addressType?.name ?? 'Other',
+      fullName: a.fullName ?? '',
+      phoneNumber: a.phoneNumber ?? '',
+      street: a.street ?? '',
+      landmark: a.landmark,
+      city: a.city ?? '',
+      state: a.state ?? '',
+      zipCode: a.zipCode ?? '',
+      isDefault: a.isDefault ?? false,
+      latitude: a.latitude != null ? (a.latitude is String ? double.tryParse(a.latitude as String) : (a.latitude as num).toDouble()) : null,
+      longitude: a.longitude != null ? (a.longitude is String ? double.tryParse(a.longitude as String) : (a.longitude as num).toDouble()) : null,
+    );
   }
 
   static Future<void> deleteAddress(String id) async {
@@ -317,7 +456,6 @@ class ApiService {
   static Future<api.Order?> placeOrder(String address, String city, String paymentMethod) async {
     final response = await _api.getOrdersApi().v1OrdersPost(
           orderInput: api.OrderInput((b) => b
-            ..userId = 1 
             ..paymentMethod = paymentMethod),
         );
     return response.data;

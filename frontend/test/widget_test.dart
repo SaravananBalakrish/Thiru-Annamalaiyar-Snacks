@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:thiru_annamalaiyar_snacks/main.dart';
+import 'package:thiru_annamalaiyar_snacks/main_customer.dart';
 
 void main() {
-  testWidgets('App smoke test', (WidgetTester tester) async {
+  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const AnnamalaiyarApp());
+    await tester.pumpWidget(const AnnamalaiyarCustomerApp());
 
     // Verify that the login page brand name is present.
     expect(find.text('ANNAMALAIYAR'), findsOneWidget);

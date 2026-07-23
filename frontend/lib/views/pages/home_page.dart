@@ -32,39 +32,25 @@ class _HomePageState extends State<HomePage> {
     return RefreshIndicator(
       onRefresh: () => context.read<ProductController>().loadProducts(),
       color: colorScheme.primary,
-      child: Consumer<ProductController>(
-        builder: (context, productController, _) {
-          if (productController.isLoading) {
-            return const _ShimmerLoading();
-          }
-
-          if (productController.error != null) {
-            return _buildErrorState(productController, colorScheme);
-          }
-
-          final products = productController.products;
-
-          return SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _Banner(),
-                _MindSection(productController: productController),
-                _RecommendedSection(products: products),
-                const Footer(),
-              ],
-            ),
-          );
-        },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _Banner(),
+            const _MindSection(),
+            const _RecommendedSection(),
+            const Footer(),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildErrorState(
-    ProductController productController,
-    ColorScheme colorScheme,
-  ) {
+  static Widget buildStaticErrorState(
+      ProductController productController,
+      ColorScheme colorScheme,
+      ) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -91,7 +77,7 @@ class _Banner extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Container(
       height: 180,
       width: double.infinity,
@@ -102,7 +88,7 @@ class _Banner extends StatelessWidget {
           children: [
             CachedNetworkImage(
               imageUrl:
-                  'https://images.unsplash.com/photo-1505253149613-112d21d9f6a9?q=80&w=1000&auto=format&fit=crop',
+              'https://images.unsplash.com/photo-1505253149613-112d21d9f6a9?q=80&w=1000&auto=format&fit=crop',
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
@@ -159,9 +145,7 @@ class _Banner extends StatelessWidget {
 }
 
 class _MindSection extends StatelessWidget {
-  final ProductController productController;
-
-  const _MindSection({required this.productController});
+  const _MindSection();
 
   String getImgForCategory(String name) {
     switch (name.toLowerCase()) {
@@ -178,47 +162,50 @@ class _MindSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dynamicCategories =
-        productController.getCategories().where((c) => c != 'All').toList();
-    if (dynamicCategories.isEmpty) return const SizedBox.shrink();
+    return Selector<ProductController, List<String>>(
+      selector: (_, pc) => pc.getCategories().where((c) => c != 'All').toList(),
+      builder: (context, dynamicCategories, _) {
+        if (dynamicCategories.isEmpty) return const SizedBox.shrink();
 
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: kPaddingM,
-            vertical: kPaddingS,
-          ),
-          child: Text(
-            kWhatsOnMind,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: kPaddingM,
+                vertical: kPaddingS,
+              ),
+              child: Text(
+                kWhatsOnMind,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                ),
+              ),
             ),
-          ),
-        ),
-        SizedBox(
-          height: 120,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: kPaddingS),
-            physics: const BouncingScrollPhysics(),
-            itemCount: dynamicCategories.length,
-            itemBuilder: (context, index) {
-              final catName = dynamicCategories[index];
-              return _CategoryItem(
-                name: catName,
-                imageUrl: getImgForCategory(catName),
-              );
-            },
-          ),
-        ),
-      ],
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: kPaddingS),
+                physics: const BouncingScrollPhysics(),
+                itemCount: dynamicCategories.length,
+                itemBuilder: (context, index) {
+                  final catName = dynamicCategories[index];
+                  return _CategoryItem(
+                    name: catName,
+                    imageUrl: getImgForCategory(catName),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -282,7 +269,7 @@ class _CategoryItem extends StatelessWidget {
           Text(
             name,
             style:
-                theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+            theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -291,64 +278,75 @@ class _CategoryItem extends StatelessWidget {
 }
 
 class _RecommendedSection extends StatelessWidget {
-  final List<Product> products;
-
-  const _RecommendedSection({required this.products});
+  const _RecommendedSection();
 
   @override
   Widget build(BuildContext context) {
-    if (products.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(kPaddingM),
-          child: Text(
-            kRecommendedItems,
-            style: TextStyle(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: kPaddingM),
-          itemCount: products.length > 5 ? 5 : products.length,
-          itemBuilder: (context, index) =>
-              ProductListItem(product: products[index]),
-        ),
-        if (products.length > 5)
-          Center(
-            child: TextButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        const CategoryMenuPage(initialCategory: 'All'),
-                  ),
-                );
-              },
-              icon: Text(
-                kViewAllSnacks,
+    return Selector<ProductController, List<Product>>(
+      selector: (_, pc) => pc.products,
+      builder: (context, products, _) {
+        if (products.isEmpty) {
+          final productController = context.read<ProductController>();
+          if (productController.isLoading) return const _ShimmerLoading();
+          if (productController.error != null) {
+            return _HomePageState.buildStaticErrorState(productController, colorScheme);
+          }
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(kPaddingM),
+              child: Text(
+                kRecommendedItems,
                 style: TextStyle(
                   color: colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
-              label: Icon(
-                Icons.arrow_forward,
-                size: 16,
-                color: colorScheme.primary,
-              ),
             ),
-          ),
-      ],
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: kPaddingM),
+              itemCount: products.length > 5 ? 5 : products.length,
+              itemBuilder: (context, index) =>
+                  ProductListItem(product: products[index]),
+            ),
+            if (products.length > 5)
+              Center(
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                        const CategoryMenuPage(initialCategory: 'All'),
+                      ),
+                    );
+                  },
+                  icon: Text(
+                    kViewAllSnacks,
+                    style: TextStyle(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  label: Icon(
+                    Icons.arrow_forward,
+                    size: 16,
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -415,7 +413,7 @@ class _ShimmerLoading extends StatelessWidget {
             ),
             ...List.generate(
               3,
-              (_) => Container(
+                  (_) => Container(
                 height: 120,
                 margin: const EdgeInsets.symmetric(
                   horizontal: kPaddingM,
@@ -443,8 +441,8 @@ class Footer extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Container(
-      color: theme.brightness == Brightness.dark 
-          ? colorScheme.surfaceContainer 
+      color: theme.brightness == Brightness.dark
+          ? colorScheme.surfaceContainer
           : kDark, // Using kDark for brand identity in light mode too
       padding: const EdgeInsets.all(40),
       child: Column(
@@ -477,62 +475,62 @@ class Footer extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 24),
-          const Expanded(
-            child: FooterCol(
-              title: kContact,
-              items: ["+91 86810 20301", kWhatsAppUs, kEmailUs],
+              const Expanded(
+                child: FooterCol(
+                  title: kContact,
+                  items: ["+91 86810 20301", kWhatsAppUs, kEmailUs],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 40),
+          Divider(color: kWhite.withValues(alpha: 0.1)),
+          const SizedBox(height: 20),
+          Text(
+            kCopyright,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: kWhite.withValues(alpha: 0.24),
+              fontSize: 12,
             ),
           ),
         ],
       ),
-      const SizedBox(height: 40),
-      Divider(color: kWhite.withValues(alpha: 0.1)),
-      const SizedBox(height: 20),
-      Text(
-        kCopyright,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: kWhite.withValues(alpha: 0.24),
-          fontSize: 12,
-        ),
-      ),
-    ],
-  ),
-);
-}
+    );
+  }
 }
 
 class FooterCol extends StatelessWidget {
-final String title;
-final List<String> items;
-const FooterCol({super.key, required this.title, required this.items});
+  final String title;
+  final List<String> items;
+  const FooterCol({super.key, required this.title, required this.items});
 
-@override
-Widget build(BuildContext context) {
-final theme = Theme.of(context);
-return Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Text(
-      title,
-      style: theme.textTheme.labelSmall?.copyWith(
-        color: kWhite,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1,
-      ),
-    ),
-    const SizedBox(height: 12),
-    ...items.map(
-      (i) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Text(
-          i,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: kWhite.withValues(alpha: 0.38),
-            fontSize: 12,
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: kWhite,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
           ),
         ),
-      ),
-    ),
+        const SizedBox(height: 12),
+        ...items.map(
+              (i) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              i,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: kWhite.withValues(alpha: 0.38),
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
