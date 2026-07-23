@@ -2,7 +2,13 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import { Context } from 'hono';
 import { z } from 'zod';
 import { generateAndSendOtp, verifyOtp } from '../auth/otp.service.js';
-import { signToken, blacklistToken } from '../auth/jwt.js';
+import {
+    signToken,
+    blacklistToken,
+    issueRefreshToken,
+    rotateRefreshToken,
+    revokeRefreshToken,
+} from '../auth/jwt.js';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
@@ -19,6 +25,10 @@ const verifyOtpSchema = z.object({
     phone: z.string().min(10).max(20),
     code: z.string().length(6),
 });
+
+// =============================================================================
+// Request OTP
+// =============================================================================
 
 authRoutes.post('/request-otp', async (c: Context) => {
     const body = await c.req.json();
@@ -42,6 +52,10 @@ authRoutes.post('/request-otp', async (c: Context) => {
     });
 });
 
+// =============================================================================
+// Verify OTP — issues BOTH an access token and a refresh token
+// =============================================================================
+
 authRoutes.post('/verify-otp', async (c: Context) => {
     const body = await c.req.json();
     const data = verifyOtpSchema.parse(body);
@@ -57,12 +71,67 @@ authRoutes.post('/verify-otp', async (c: Context) => {
         user = [newUser];
     }
 
-    const token = signToken(user[0].id);
+    const userId = user[0].id;
 
-    return c.json({ success: true, token, userPhone: phone });
+    // Issue a short-lived access token (15 minutes) and a long-lived refresh token (30 days)
+    const accessToken = signToken(userId);
+    const refreshToken = await issueRefreshToken(userId);
+
+    return c.json({
+        success: true,
+        accessToken,
+        refreshToken,
+        expiresIn: 15 * 60,        // 900 seconds — tells the mobile app when to refresh
+        tokenType: 'Bearer',
+        userPhone: phone,
+    });
 });
 
-// JWT validation endpoint - requires authentication
+// =============================================================================
+// Refresh — silently renew access token using a valid refresh token
+// No auth middleware needed — the refresh token IS the credential here.
+// =============================================================================
+
+const refreshSchema = z.object({
+    refreshToken: z.string().min(1),
+});
+
+authRoutes.post('/refresh', async (c: Context) => {
+    const body = await c.req.json();
+
+    let data: z.infer<typeof refreshSchema>;
+    try {
+        data = refreshSchema.parse(body);
+    } catch {
+        return c.json({ success: false, message: 'refreshToken is required' }, 400);
+    }
+
+    // Rotate: revoke old token and issue a new one atomically
+    const result = await rotateRefreshToken(data.refreshToken);
+
+    if (!result) {
+        return c.json(
+            { success: false, code: 'REFRESH_TOKEN_INVALID', message: 'Refresh token is invalid or expired. Please log in again.' },
+            401
+        );
+    }
+
+    const { userId, newRefreshToken } = result;
+    const accessToken = signToken(userId);
+
+    return c.json({
+        success: true,
+        accessToken,
+        refreshToken: newRefreshToken,
+        expiresIn: 15 * 60,
+        tokenType: 'Bearer',
+    });
+});
+
+// =============================================================================
+// Validate — verify the current access token is still valid
+// =============================================================================
+
 authRoutes.post('/validate', authMiddleware, async (c: Context) => {
     const userId = c.get('userId');
     return c.json({ 
@@ -72,21 +141,36 @@ authRoutes.post('/validate', authMiddleware, async (c: Context) => {
     });
 });
 
-// Logout endpoint - requires authentication
+// =============================================================================
+// Logout — revoke refresh token + blacklist the current access token
+// =============================================================================
+
+const logoutSchema = z.object({
+    refreshToken: z.string().min(1).optional(),
+});
+
 authRoutes.post('/logout', authMiddleware, async (c: Context) => {
+    // Blacklist the current access token
     const auth = c.req.header('authorization') || '';
     const match = auth.match(/^Bearer\s+(.+)$/i);
-    if (!match) {
-        return c.json({ success: false, message: 'No token provided' }, 400);
+    if (match) {
+        await blacklistToken(match[1]);
     }
-    
-    const token = match[1];
-    await blacklistToken(token);
+
+    // Also revoke the refresh token if provided
+    const body = await c.req.json().catch(() => ({}));
+    const parsed = logoutSchema.safeParse(body);
+    if (parsed.success && parsed.data.refreshToken) {
+        await revokeRefreshToken(parsed.data.refreshToken);
+    }
     
     return c.json({ success: true, message: 'Logged out successfully' });
 });
 
-// Test endpoint to verify Twilio configuration
+// =============================================================================
+// Test SMS — verify Twilio configuration
+// =============================================================================
+
 authRoutes.get('/test-sms', async (c: Context) => {
     try {
         const testPhone = process.env.TWILIO_PHONE_NUMBER || '+1234567890';

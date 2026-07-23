@@ -92,3 +92,17 @@ export const blacklistedTokens = pgTable('blacklisted_tokens', {
   token: varchar('token', { length: 500 }).notNull().unique(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+// Refresh tokens for mobile session management.
+// One row per active device session per user.
+// `revokedAt` is set on logout or token rotation — never deleted for audit trail.
+export const refreshTokens = pgTable('refresh_tokens', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  token: varchar('token', { length: 255 }).notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  revokedAt: timestamp('revoked_at'), // null = active; set = revoked
+});
