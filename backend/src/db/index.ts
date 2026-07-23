@@ -14,7 +14,7 @@ const pool = new Pool({
   connectionString: DATABASE_URL,
   // Connection pool settings optimized for production
   max: Number(process.env.DB_POOL_MAX) || 20,           // Maximum connections in pool
-  min: Number(process.env.DB_POOL_MIN) || 4,            // Minimum connections in pool
+  min: Number(process.env.DB_POOL_MIN) || 0,            // Minimum connections in pool (0 recommended for Neon)
   idleTimeoutMillis: 30000,                             // Close idle connections after 30s
   connectionTimeoutMillis: 5000,                       // 5 second connection timeout
   maxLifetimeSeconds: 60 * 60,                         // Recycle connections after 1 hour

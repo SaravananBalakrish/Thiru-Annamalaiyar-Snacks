@@ -44,7 +44,13 @@ router.get('/', async (c: Context) => {
       .where(eq(addresses.userId, userId))
       .orderBy(desc(addresses.isDefault), desc(addresses.createdAt));
       
-    return c.json({ success: true, data: userAddresses });
+    const mappedAddresses = userAddresses.map(addr => ({
+      ...addr,
+      latitude: addr.latitude !== null ? String(addr.latitude) : null,
+      longitude: addr.longitude !== null ? String(addr.longitude) : null,
+    }));
+      
+    return c.json({ success: true, data: mappedAddresses });
   } catch (err) {
     console.error('[addresses] GET /', err);
     return c.json({ success: false, error: 'Internal server error' }, 500);
@@ -69,7 +75,13 @@ router.get('/:id', async (c: Context) => {
     if (addr.length === 0) {
       return c.json({ success: false, error: 'Address not found' }, 404);
     }
-    return c.json({ success: true, data: addr[0] });
+    const mappedAddress = {
+      ...addr[0],
+      latitude: addr[0].latitude !== null ? String(addr[0].latitude) : null,
+      longitude: addr[0].longitude !== null ? String(addr[0].longitude) : null,
+    };
+
+    return c.json({ success: true, data: mappedAddress });
   } catch (err) {
     console.error('[addresses] GET /:id', err);
     return c.json({ success: false, error: 'Internal server error' }, 500);
@@ -117,7 +129,13 @@ router.post('/', async (c: Context) => {
         .values(insertValues)
         .returning();
 
-      return created;
+      const mappedCreated = {
+        ...created,
+        latitude: created.latitude !== null ? String(created.latitude) : null,
+        longitude: created.longitude !== null ? String(created.longitude) : null,
+      };
+
+      return mappedCreated;
     });
 
     return c.json({ success: true, data: result }, 201);
@@ -175,7 +193,13 @@ const handleUpdate = async (c: Context) => {
         .where(and(eq(addresses.id, id), eq(addresses.userId, userId)))
         .returning();
 
-      return updated;
+      const mappedUpdated = {
+        ...updated,
+        latitude: updated.latitude !== null ? String(updated.latitude) : null,
+        longitude: updated.longitude !== null ? String(updated.longitude) : null,
+      };
+
+      return mappedUpdated;
     });
 
     if (!updatedAddress) {
